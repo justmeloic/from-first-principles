@@ -1,12 +1,13 @@
 # Makefile for deploying services
 
-.PHONY: deploy-react reset-dev help clean
+.PHONY: deploy-react reset-dev add-license help clean
 
 # Default target
 help:
 	@echo "Available targets:"
 	@echo "  deploy-react    - Deploy the React web UI service"
 	@echo "  reset-dev       - Reset dev branch from main"
+	@echo "  add-license     - Add license headers to source files"
 	@echo "  clean          - Clean build artifacts and logs"
 	@echo "  help           - Show this help message"
 
@@ -21,6 +22,12 @@ reset-dev:
 	@echo "🔄 Resetting dev branch from main..."
 	@chmod +x scripts/reset-dev-branch.sh
 	@cd scripts && ./reset-dev-branch.sh
+
+# Add license headers to source files
+add-license:
+	@echo "📄 Adding license headers to source files..."
+	@chmod +x scripts/add-license.sh
+	@cd scripts && ./add-license.sh
 
 # Clean build artifacts and logs
 clean:
