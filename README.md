@@ -25,8 +25,8 @@
 
 Knowledge empowers individuals and enhances lives, and we're committed to providing a platform for lifelong learning.
 
-![Interface Greeting](docs/public/interface-light.gif)
-![Interface Greeting](docs/public/interface-dark.gif)
+<img src="docs/public/interface-light.gif" alt="Interface Greeting" style="border-radius: 10px; max-width: 100%;">
+<img src="docs/public/interface-dark.gif" alt="Interface Greeting" style="border-radius: 10px; max-width: 100%;">
 
 </div>
 
