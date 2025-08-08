@@ -1,11 +1,13 @@
 <div align="center">
   <img src="docs/public/images/readme-logo.png">
-  A website, an approach, a philosophy
+  A platform, an approach, a philosophy
 
   <br>
 </div>
 
 ---
+
+ <div align="center">
 
 [![codecov](https://codecov.io/gh/justmeloic/from-first-principles/graph/badge.svg?token=4GYOJ42J2C)](https://codecov.io/gh/justmeloic/from-first-principles)
 ![Static Badge](https://img.shields.io/badge/build-passing-brightgreen)
@@ -15,35 +17,27 @@
 [![GitHub issues](https://img.shields.io/github/issues/justmeloic/From-First-Principles)](https://github.com/justmeloic/From-First-Principles/issues)
 [![GitHub stars](https://img.shields.io/github/stars/justmeloic/From-First-Principles)](https://github.com/justmeloic/From-First-Principles/stargazers)
 
-
-
-**Author:** [Loïc Muhirwa](https://github.com/justmeloic/)
-
-
-
+**Creator & Maintainer:** [Loïc Muhirwa](https://github.com/justmeloic/)
 
 [FromFirstPrinciple.com](https://fromfirstprinciple.com/)<br>
-
-
 
 ### Our Thesis
 
 Knowledge empowers individuals and enhances lives, and we're committed to providing a platform for lifelong learning.
 
+![Interface Greeting](docs/public/interface-light.gif)
+![Interface Greeting](docs/public/interface-dark.gif)
 
-> "When we consider the responsibility of intellectuals, our basic concern must be their role in the creation and analysis of ideology." - Noam Chomsky
-
-This quote resonates with the essence of "From First Principles." We strive to present information objectively, encouraging critical thinking and independent conclusions.
-
-
+</div>
 
 ### Contributing
+
 **[Loïc Muhirwa](https://github.com/justmeloic/)** initiated this project, and we enthusiastically welcome contributions of all kinds! Here's how you can get involved:
 
-*   **Contribute Code:** Developers can contribute by adding features, improving functionality, or fixing bugs. We follow standard Git practices: fork the repository and submit pull requests. Please refer to `CONTRIBUTING_DEV.md` for more details.
-*   **Contribute Content:** Writers and subject matter experts can contribute by creating informative and engaging articles. Please refer to `CONTRIBUTING_CONTENT.md` for more details on formatting and submission guidelines.
----
+- **Contribute Code:** Developers can contribute by adding features, improving functionality, or fixing bugs. We follow standard Git practices: fork the repository and submit pull requests. Please refer to `CONTRIBUTING_DEV.md` for more details.
+- **Contribute Content:** Writers and subject matter experts can contribute by creating informative and engaging articles. Please refer to `CONTRIBUTING_CONTENT.md` for more details on formatting and submission guidelines.
 
+---
 
 **Information is a privilege, and we believe in sharing it widely. Join us in building "From First Principles" into a valuable resource for everyone!**
 
