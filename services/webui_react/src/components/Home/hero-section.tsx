@@ -75,7 +75,7 @@ export function HeroSection() {
           transition-colors duration-0
         `}
         >
-          I philosophy and science, a first principle is a basic proposition or
+          In philosophy and science, a first principle is a basic proposition or
           assumption that cannot be deduced from any other proposition or
           assumption
         </h1>
