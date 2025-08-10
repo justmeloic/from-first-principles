@@ -76,11 +76,12 @@ export function ChatInput({ onSend, isLoading }: ChatInputProps) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="relative w-full max-w-[70%] mx-auto mb-6"
+      className="relative w-full max-w-[95%] md:max-w-[70%] mx-auto mb-6"
     >
       <div
         className={cn(
-          "relative flex flex-col w-full min-h-28 rounded-3xl border bg-white dark:bg-black dark:border-gray-600 transition-shadow duration-300 ease-in-out",
+          "relative flex flex-col w-full rounded-full md:rounded-3xl border bg-white dark:bg-black dark:border-gray-600 transition-shadow duration-300 ease-in-out",
+          "min-h-16 md:min-h-28", // Reduced height on mobile
           isFocused
             ? "shadow-[0_1px_6px_1px_rgba(32,33,36,0.12),0_1px_8px_2px_rgba(32,33,36,0.12),0_1px_12px_3px_rgba(32,33,36,0.2)] dark:shadow-[0_4px_8px_0_rgba(0,0,0,0.4)]"
             : "shadow-none"
@@ -95,15 +96,15 @@ export function ChatInput({ onSend, isLoading }: ChatInputProps) {
           onKeyDown={handleKeyDown}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          className="min-h-12 w-full rounded-t-3xl bg-transparent px-4 py-3 text-sm dark:text-gray-200 outline-none placeholder:text-muted-foreground dark:placeholder:text-gray-500 resize-none overflow-hidden"
+          className="min-h-8 md:min-h-12 w-full rounded-t-3xl bg-transparent px-4 pt-4 pb-2 md:py-3 text-sm dark:text-gray-200 outline-none placeholder:text-muted-foreground dark:placeholder:text-gray-500 resize-none overflow-hidden"
           rows={1}
           disabled={isLoading}
         />
 
         {/* Bottom section with buttons */}
-        <div className="flex justify-between items-center mt-auto mb-4 px-2">
-          {/* File upload button */}
-          <div className="flex items-center">
+        <div className="flex justify-between items-center mt-auto mb-2 md:mb-4 px-2">
+          {/* File upload button - hidden on mobile */}
+          <div className="hidden md:flex items-center">
             <button
               type="button"
               className={cn(
@@ -117,12 +118,12 @@ export function ChatInput({ onSend, isLoading }: ChatInputProps) {
           </div>
 
           {/* Right side buttons */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 ml-auto">
             <button
               type="button"
               onClick={isRecording ? stopRecording : startRecording}
               className={cn(
-                "flex h-8 w-8 items-center justify-center rounded-full transition-colors",
+                "hidden md:flex h-8 w-8 items-center justify-center rounded-full transition-colors",
                 isRecording
                   ? "bg-red-500 hover:bg-red-600"
                   : "text-gray-600 dark:text-gray-300 hover:bg-gradient-to-r from-blue-500/20 to-pink-500/20",
@@ -143,10 +144,10 @@ export function ChatInput({ onSend, isLoading }: ChatInputProps) {
                 type="submit"
                 className={cn(
                   "flex h-7 w-7 items-center justify-center rounded-full transition-colors",
-                  "bg-blue-100 hover:bg-blue-200 focus:bg-blue-200 dark:bg-gray-700 dark:hover:bg-gray-600 dark:focus:bg-gray-600 focus:outline-none"
+                  "bg-accent hover:bg-accent/80 text-white focus:outline-none shadow-sm"
                 )}
               >
-                <SendHorizontal className="h-4 w-4 text-gray-800 dark:text-gray-300" />
+                <SendHorizontal className="h-4 w-4 text-white" />
                 <span className="sr-only">Send message</span>
               </button>
             ) : null}

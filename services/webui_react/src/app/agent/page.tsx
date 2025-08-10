@@ -89,7 +89,7 @@ export default function AgentPage() {
   const [isFirstPrompt, setIsFirstPrompt] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingText, setLoadingText] = useState("Thinking...");
-  const [isReferencesHidden, setIsReferencesHidden] = useState(false);
+  const [isReferencesHidden, setIsReferencesHidden] = useState(true);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -309,7 +309,7 @@ export default function AgentPage() {
     setIsFirstPrompt(true);
     setIsLoading(false);
     setLoadingText("Thinking...");
-    setIsReferencesHidden(false);
+    setIsReferencesHidden(true);
     localStorage.removeItem("agentChatHistory");
     localStorage.removeItem("agentChatReferences");
     localStorage.removeItem("agentIsFirstPrompt");
@@ -344,7 +344,7 @@ export default function AgentPage() {
           <main
             className={`flex-1 flex flex-col items-center w-full relative overflow-hidden transition-all duration-700 ease-in-out ${
               Object.keys(references).length > 0 && !isReferencesHidden
-                ? "mr-[28rem]"
+                ? "md:mr-[28rem]"
                 : ""
             }`}
           >
@@ -438,15 +438,42 @@ export default function AgentPage() {
 
             <div className="w-full max-w-[800px] mx-auto p-4 border-gray-200 dark:border-gray-700">
               <ChatInput onSend={handleSend} isLoading={isLoading} />
+
+              {/* Mobile: References button positioned below chat input */}
+              {Object.keys(references).length > 0 && isReferencesHidden && (
+                <div className="md:hidden flex justify-center mt-4">
+                  <button
+                    onClick={toggleReferencesVisibility}
+                    className="px-6 py-3 bg-accent hover:bg-accent/80 text-white rounded-full shadow-lg transition-all duration-300 flex items-center gap-3"
+                    aria-label="Show references"
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <span className="text-sm font-medium">View References</span>
+                  </button>
+                </div>
+              )}
             </div>
           </main>
 
           {Object.keys(references).length > 0 && (
             <>
+              {/* Desktop: Right side expand button */}
               {isReferencesHidden && (
                 <button
                   onClick={toggleReferencesVisibility}
-                  className="fixed right-4 top-40 z-20 p-3 bg-accent hover:bg-accent/80 dark:bg-gray-700 rounded-full dark:hover:bg-gray-600 transition-all duration-300 shadow-lg"
+                  className="hidden md:block fixed right-4 top-40 z-20 p-3 bg-accent hover:bg-accent/80 dark:bg-gray-700 rounded-full dark:hover:bg-gray-600 transition-all duration-300 shadow-lg"
                   aria-label="Show references"
                 >
                   <svg
@@ -465,8 +492,9 @@ export default function AgentPage() {
                 </button>
               )}
 
+              {/* Desktop: Right side panel */}
               <div
-                className={`fixed right-0 w-[28rem] bg-white dark:bg-zinc-900 overflow-y-auto rounded-[2rem] m-2 mr-4 mt-20 min-h-[200px] max-h-[calc(100vh-10rem)] transition-transform duration-700 ease-in-out shadow-custom dark:shadow-none ${
+                className={`hidden md:block fixed right-0 w-[28rem] bg-white dark:bg-zinc-900 overflow-y-auto rounded-[2rem] m-2 mr-4 mt-20 min-h-[200px] max-h-[calc(100vh-10rem)] transition-transform duration-700 ease-in-out shadow-custom dark:shadow-none ${
                   isReferencesHidden ? "translate-x-[120%]" : "translate-x-0"
                 }`}
               >
@@ -476,6 +504,57 @@ export default function AgentPage() {
                   onToggleVisibility={toggleReferencesVisibility}
                 />
               </div>
+
+              {/* Mobile: Bottom sheet */}
+              <div
+                className={`md:hidden fixed inset-x-0 bottom-0 z-30 bg-white dark:bg-zinc-900 rounded-t-[2rem] shadow-2xl transition-transform duration-500 ease-in-out ${
+                  isReferencesHidden ? "translate-y-full" : "translate-y-0"
+                } max-h-[70vh] overflow-hidden`}
+              >
+                {/* Mobile header with drag handle */}
+                <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+                  <div className="flex flex-col items-center w-full">
+                    <div className="w-12 h-1 bg-gray-300 dark:bg-gray-600 rounded-full mb-3"></div>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                      References
+                    </h3>
+                  </div>
+                  <button
+                    onClick={toggleReferencesVisibility}
+                    className="absolute right-4 top-4 p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+                    aria-label="Close references"
+                  >
+                    <svg
+                      className="w-5 h-5 text-gray-500 dark:text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
+                <div className="overflow-y-auto max-h-[calc(70vh-80px)]">
+                  <ReferencesPanel
+                    references={references}
+                    isHidden={isReferencesHidden}
+                    onToggleVisibility={toggleReferencesVisibility}
+                  />
+                </div>
+              </div>
+
+              {/* Mobile: Backdrop */}
+              {!isReferencesHidden && (
+                <div
+                  className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-20"
+                  onClick={toggleReferencesVisibility}
+                ></div>
+              )}
             </>
           )}
         </div>
