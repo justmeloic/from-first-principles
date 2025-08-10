@@ -1,9 +1,10 @@
-import { ThemeProvider } from "@/providers/theme-provider";
-import { NavBar } from "@/components/Layout/nav-bar";
+import { AgentFloatingButton } from "@/components/Agent/floating-button";
 import { Footer } from "@/components/Layout/footer";
-import "../styles/globals.css";
+import { NavBar } from "@/components/Layout/nav-bar";
+import { ThemeProvider } from "@/providers/theme-provider";
 import type { Metadata } from "next";
 import { Toaster } from "sonner";
+import "../styles/globals.css";
 
 export const metadata: Metadata = {
   title: "From First Principles",
@@ -37,6 +38,7 @@ export default function RootLayout({
             <NavBar />
             {children}
             <Footer />
+            <AgentFloatingButton />
           </div>
         </ThemeProvider>
         <Toaster position="top-center" richColors />
