@@ -40,11 +40,11 @@ export function ReferencesPanel({
 
   return (
     <div className="h-full relative p-6 md:p-8">
-      {/* Hide button - only show when panel is visible */}
+      {/* Hide button - only show when panel is visible and on desktop */}
       {!isHidden && (
         <button
           onClick={onToggleVisibility}
-          className="absolute right-4 top-4 z-10 p-3 bg-accent hover:bg-accent/80 dark:bg-gray-700 rounded-full dark:hover:bg-gray-600 transition-all duration-300 shadow-lg"
+          className="hidden md:block absolute right-4 top-4 z-10 p-3 bg-accent hover:bg-accent/80 dark:bg-gray-700 rounded-full dark:hover:bg-gray-600 transition-all duration-300 shadow-lg"
           aria-label="Hide references"
         >
           <svg
