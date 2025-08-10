@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { ThemeToggle } from "@/components/Layout/theme-toggle";
 import { useTheme } from "@/providers/theme-provider";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState } from "react"; // Add this import
 
 export function NavBar() {
@@ -48,6 +48,15 @@ export function NavBar() {
         onClick={() => setIsMobileMenuOpen(false)}
       >
         Engineering
+      </Link>
+      <Link
+        href="/agent"
+        className={`md:text-[13px] text-[20px] transition-colors md:hover:text-accent hover:text-accent ${
+          theme === "dark" ? "text-gray-300" : "text-gray-800"
+        } md:py-0 py-6`}
+        onClick={() => setIsMobileMenuOpen(false)}
+      >
+        AI Agent
       </Link>
       {isHomePage ? (
         <button
