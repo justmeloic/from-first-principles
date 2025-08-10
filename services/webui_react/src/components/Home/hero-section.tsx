@@ -1,7 +1,7 @@
 "use client";
 
-import { ChevronDown } from "lucide-react";
 import { useTheme } from "@/providers/theme-provider";
+import { ChevronDown } from "lucide-react";
 import { useEffect, useRef } from "react";
 
 export function HeroSection() {
@@ -75,7 +75,7 @@ export function HeroSection() {
           transition-colors duration-0
         `}
         >
-          In philosophy and science, a first principle is a basic proposition or
+          I philosophy and science, a first principle is a basic proposition or
           assumption that cannot be deduced from any other proposition or
           assumption
         </h1>
