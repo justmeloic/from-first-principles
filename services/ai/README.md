@@ -1,198 +1,269 @@
-# Agent Orchestration
+# From First Principles - AI Service
 
-![Python](https://img.shields.io/badge/python-v3.13+-blue.svg)
-![Google ADK](https://img.shields.io/badge/Google_ADK-0.2.0+-4285F4.svg)
+![Python](https://img.shields.io/badge/python-v3.11+-blue.svg)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg)
+![Google ADK](https://img.shields.io/badge/Google_ADK-1.5.0+-4285F4.svg)
 ![GCP](https://img.shields.io/badge/Google_Cloud-4285F4?logo=google-cloud&logoColor=white)
 
-Backend service that coordinates AI agents for the AgentChat system.
+AI backend service for the From First Principles platform, providing intelligent chat capabilities powered by Google's Gemini models.
 
-## System Architecture
+## Overview
 
-### High-Level Architecture
+This service provides a FastAPI-based backend that powers the AI chat functionality for the From First Principles website. It features:
 
-The following diagram illustrates the high-level architecture of the agent orchestration system:
+- **Gemini AI Integration**: Powered by Google's latest Gemini 2.5 Flash and Pro models
+- **Session Management**: Persistent conversation history across multiple interactions
+- **CORS Configuration**: Secure cross-origin requests from the frontend
+- **Static File Serving**: Integrated frontend serving capabilities
+- **Production Ready**: Deployment scripts and production configurations
+
+## Architecture
 
 ```mermaid
 graph TD
-    A[User] -- Sends Message --> B(Agent Orchestrator);
-    B -- Routes to Appropriate Agent --> C{Multi-Model Agents};
-    C -- Agent A: GPT-4 --> D[OpenAI API];
-    C -- Agent B: Claude --> E[Anthropic API];
-    C -- Agent C: Gemini --> F[Vertex AI API];
-    D -- Response --> B;
-    E -- Response --> B;
-    F -- Response --> B;
-    B -- Formatted Response --> A;
-
-    style B fill:#f9f,stroke:#333,stroke-width:2px
-    style C fill:#bbf,stroke:#333,stroke-width:2px
-    style D fill:#lightgreen,stroke:#333,stroke-width:2px
-    style E fill:#lightblue,stroke:#333,stroke-width:2px
-    style F fill:#orange,stroke:#333,stroke-width:2px
+    A[Frontend - fromfirstprinciple.com] --> B[AI Service API]
+    B --> C[Google ADK Session Management]
+    B --> D[Gemini Models]
+    C --> E[In-Memory Session Store]
+    D --> F[Vertex AI / Google AI Studio]
+    
+    style A fill:#e3f2fd
+    style B fill:#f3e5f5
+    style C fill:#e8f5e8
+    style D fill:#fff3e0
 ```
-
-### Multi-Model Conversation Continuity
-
-One elegant feature of this system is **seamless model switching mid-conversation**. Users can switch between different AI models (e.g., Gemini 2.5 Flash ↔ Gemini 2.5 Pro) while maintaining complete conversation history and context.
-
-#### How It Works
-
-Our architecture leverages Google ADK's session management to provide true conversation continuity across different models:
-
-```mermaid
-graph TB
-    subgraph "Frontend"
-        UI[User Interface]
-        MS[Model Selector]
-    end
-
-    subgraph "Backend - FastAPI"
-        EP[Agent Endpoint]
-        AF[Agent Factory]
-        DEP[Dependencies]
-    end
-
-    subgraph "Google ADK Session Layer"
-        SS[Session Service<br/>📝 Shared Memory]
-        SES[Session<br/>🆔 c5e10550-...]
-    end
-
-    subgraph "Model-Specific Runners"
-        R1[Runner: Flash<br/>🏃‍♂️ Cached]
-        R2[Runner: Pro<br/>🏃‍♂️ Cached]
-        A1[Agent: Flash<br/>🤖 LRU Cached]
-        A2[Agent: Pro<br/>🤖 LRU Cached]
-    end
-
-    subgraph "Google Vertex AI"
-        V1[Gemini 2.5 Flash]
-        V2[Gemini 2.5 Pro]
-    end
-
-    UI --> |"Switch Model"| MS
-    MS --> |"model: gemini-2.5-pro"| EP
-    EP --> |"Get Agent"| AF
-    AF --> |"LRU Cache"| A1
-    AF --> |"LRU Cache"| A2
-    EP --> |"Get Runner"| DEP
-    DEP --> |"Create if needed"| R1
-    DEP --> |"Create if needed"| R2
-
-    R1 --> |"SAME session_service"| SS
-    R2 --> |"SAME session_service"| SS
-    SS --> |"SAME session_id"| SES
-
-    R1 --> |"Model-specific"| A1
-    R2 --> |"Model-specific"| A2
-    A1 --> V1
-    A2 --> V2
-
-    SES --> |"📚 Full History<br/>Auto-loaded"| R1
-    SES --> |"📚 Full History<br/>Auto-loaded"| R2
-
-    style SS fill:#e1f5fe,stroke:#0277bd,stroke-width:3px
-    style SES fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
-    style R1 fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px
-    style R2 fill:#fff3e0,stroke:#ef6c00,stroke-width:2px
-    style AF fill:#fce4ec,stroke:#c2185b,stroke-width:2px
-```
-
-#### Key Architecture Components
-
-1. **Agent Factory Pattern**
-
-   ```python
-   @lru_cache(maxsize=10)
-   def get_agent(self, model_name: str) -> Agent:
-       # Creates and caches model-specific agents
-   ```
-
-2. **Runner Management**
-
-   ```python
-   runner_key = f'runner_{model_name.replace("-", "_").replace(".", "_")}'
-   if not hasattr(request.app.state, runner_key):
-       runner = Runner(
-           agent=agent,                                    # Model-specific
-           app_name=config.app_name,                      # Shared
-           session_service=request.app.state.session_service,  # 🔑 THE MAGIC
-       )
-   ```
-
-3. **Shared Session Service**
-   - **Single Session ID**: All models use the same session identifier
-   - **Automatic History Loading**: ADK automatically provides full conversation context
-   - **Seamless Continuity**: Users experience uninterrupted conversations
-
-#### Benefits
-
-✅ **True Conversation Continuity**: Switch models without losing context
-✅ **Performance Optimization**: Cached runners and agents for fast switching
-✅ **Model-Specific Capabilities**: Each model maintains its unique characteristics
-✅ **Unified Memory**: Shared session service ensures consistent experience
-
-The diagram shows the interaction between different components of the system:
-
-- User Interaction: How users interact with different AI agents
-- Core Agent System: The orchestrator that routes requests to appropriate agents
-- Multi-Model Support: Various AI models and their APIs
-- Tool Integration: Specialized capabilities available to each agent
 
 ## Development Setup
 
 ### Prerequisites
 
-- Python 3.13+
+- Python 3.11+
 - uv package manager
-- Google Cloud CLI
-- Access to GCP project with enabled APIs:
-  - Vertex AI
-  - BigQuery
-  - Cloud Storage
+- Google Cloud CLI (for Vertex AI)
+- ngrok (for production deployment)
 
-### Environment Setup
+### Installation
 
+1. **Install dependencies**:
 ```bash
-# Install uv if not already installed
-pip install uv
-
-# Create virtual environment and install dependencies
 uv venv
 uv sync
 ```
 
-### Configuration
+2. **Configure environment**:
+```bash
+cp .env.example .env
+# Edit .env with your configuration (see Configuration section)
+```
 
-1. Set up Google Cloud authentication:
-
+3. **Set up Google Cloud authentication**:
 ```bash
 gcloud auth application-default login
 ```
 
-2. Configure environment variables:
+### Configuration
 
+Update your `.env` file with the following settings:
+
+#### Required Settings
 ```bash
-# Copy the example environment file
-cp .env.example .env
+# Server Configuration
+HOST=0.0.0.0
+PORT=8081
+ENVIRONMENT=development
 
-# Open the .env file and update the following variables:
-# - GOOGLE_CLOUD_PROJECT: Your GCP project ID
-# - GOOGLE_CLOUD_LOCATION: Your GCP region (e.g., us-central1)
-# - FRONTEND_URL: Your frontend URL (default: http://localhost:3000)
-# - GOOGLE_CSE_ID: Your Google Custom Search Engine ID (if using)
-# - CUSTOM_SEARCH_API_KEY: Your Custom Search API key (if using)
+# Google Cloud Settings
+GOOGLE_CLOUD_PROJECT=your-gcp-project-id
+GOOGLE_CLOUD_LOCATION=us-central1
+GOOGLE_API_KEY=your-google-api-key
+
+# Authentication
+AUTH_SECRET=your-super-secret-key
+
+# Frontend URL for CORS
+FRONTEND_URL=http://localhost:3000
 ```
 
-For the Vertex AI configuration, ensure `GOOGLE_GENAI_USE_VERTEXAI=TRUE` is set in your `.env` file to use Vertex AI API through your GCP project.
-
-If you prefer to use the Google AI Studio API directly, set `GOOGLE_GENAI_USE_VERTEXAI=FALSE` and provide your `GOOGLE_API_KEY`.
-
-### Running the Server
-
-Start the development server:
-
+#### CORS Configuration
+For production deployments, update `FRONTEND_URL` to include your production domain:
 ```bash
-uvicorn src.app.main:app --reload --host 0.0.0.0 --port 8000
+FRONTEND_URL=https://fromfirstprinciple.com,http://localhost:3000
 ```
 
-The server will be available at `http://localhost:8000`. The `--reload` flag enables auto-reloading when code changes are detected during development.
+For ngrok integration (see Ngrok Setup section):
+```bash
+FRONTEND_URL=https://your-ngrok-url.ngrok-free.app,https://fromfirstprinciple.com,http://localhost:3000
+```
+
+### Running the Service
+
+#### Development Mode
+```bash
+./scripts/deploy-server.sh start --dev
+```
+
+#### Production Mode
+```bash
+./scripts/deploy-server.sh start --port 8080
+```
+
+The service will be available at:
+- **API Documentation**: `http://localhost:8080/docs`
+- **Health Check**: `http://localhost:8080/api/v1/health`
+- **Chat Endpoint**: `http://localhost:8080/api/v1/root_agent/`
+
+## Ngrok Integration
+
+For exposing your local AI service to the internet (useful for production frontend testing):
+
+### Setup Steps
+
+1. **Start the AI service**:
+```bash
+./scripts/deploy-server.sh start --port 8080
+```
+
+2. **Start ngrok tunnel**:
+```bash
+ngrok http 8080
+```
+
+3. **Update CORS configuration**:
+```bash
+# In .env file
+FRONTEND_URL=https://abc123.ngrok-free.app,https://fromfirstprinciple.com,http://localhost:3000
+```
+
+4. **Restart the service**:
+```bash
+./scripts/deploy-server.sh restart --port 8080
+```
+
+5. **Update frontend configuration**:
+```bash
+# In frontend .env.local
+NEXT_PUBLIC_API_BASE_URL=https://abc123.ngrok-free.app
+```
+
+### Testing Ngrok Setup
+```bash
+./tests/test_ngrok_setup.sh
+```
+
+### Frontend Integration Script
+Use the utility script to easily switch between local and ngrok configurations:
+```bash
+cd ../webui_react
+./scripts/switch-api-config.sh ngrok   # Switch to ngrok
+./scripts/switch-api-config.sh local   # Switch to local
+```
+
+## API Endpoints
+
+### Chat Endpoint
+```http
+POST /api/v1/root_agent/
+Content-Type: application/json
+
+{
+  "text": "Your message here",
+  "model": "gemini-2.5-flash"  // optional
+}
+```
+
+Response:
+```json
+{
+  "response": "AI response",
+  "references": {},
+  "session_id": "uuid",
+  "model": "gemini-2.5-flash",
+  "confidence": null
+}
+```
+
+### Available Models
+```http
+GET /api/v1/root_agent/models
+```
+
+### Health Check
+```http
+GET /api/v1/health
+```
+
+## Session Management
+
+The service uses Google ADK for session management, providing:
+- **Persistent conversations**: Chat history maintained across requests
+- **Session isolation**: Each session has its own conversation context
+- **Automatic session creation**: New sessions created as needed
+- **Memory management**: Efficient in-memory session storage
+
+## Security
+
+- **CORS Protection**: Configured to only allow requests from specified origins
+- **Session validation**: Secure session ID generation and validation
+- **Environment isolation**: Sensitive configuration in environment variables
+- **Input validation**: Request validation using Pydantic models
+
+## Deployment
+
+### Production Deployment
+```bash
+./scripts/deploy-server.sh start
+```
+
+### Service Management
+```bash
+# Check status
+./scripts/deploy-server.sh status
+
+# Stop service
+./scripts/deploy-server.sh stop
+
+# Restart service
+./scripts/deploy-server.sh restart
+
+# View logs
+tail -f logs/access.log
+tail -f logs/error.log
+```
+
+## Troubleshooting
+
+### Common Issues
+
+#### CORS Errors
+- Ensure frontend domain is in `FRONTEND_URL`
+- Restart service after updating environment
+- Check browser developer tools for specific CORS errors
+
+#### Connection Issues
+- Verify service is running: `curl http://localhost:8080/api/v1/health`
+- Check logs: `tail -f logs/error.log`
+- Ensure port is not in use: `lsof -i :8080`
+
+#### Ngrok Issues
+- Verify tunnel is active: `curl http://127.0.0.1:4040/api/tunnels`
+- Test local service first before testing ngrok
+- Monitor ngrok connections at: `http://127.0.0.1:4040`
+
+### Logs
+Service logs are available in the `logs/` directory:
+- `access.log`: HTTP request logs
+- `error.log`: Error and debug logs
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## License
+
+Copyright 2025 Loïc Muhirwa
+
+Licensed under the Apache License, Version 2.0
