@@ -1,0 +1,50 @@
+# Copyright 2025 Loïc Muhirwa
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""Main API router for v1."""
+
+from fastapi import APIRouter
+
+from src.app.api.v1.routes import (
+    agent,
+    auth,
+    files,
+    utility,
+)
+
+main_v1_router = APIRouter(prefix='/api/v1')
+
+
+main_v1_router.include_router(
+    agent.router,
+    prefix='/root_agent',
+    tags=['root_agent'],
+)
+
+main_v1_router.include_router(
+    auth.router,
+    prefix='/auth',
+    tags=['authentication'],
+)
+
+main_v1_router.include_router(
+    files.router,
+    prefix='/files',
+    tags=['files'],
+)
+
+main_v1_router.include_router(
+    utility.router,
+    tags=['utility', 'system'],
+)
