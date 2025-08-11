@@ -7,49 +7,12 @@ import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/toaster";
 import { useToast } from "@/hooks/use-toast";
+import { sendMessage, startNewSession } from "@/lib/api";
 import { useTheme } from "@/providers/theme-provider";
+import { ChatMessage, Reference } from "@/types";
 import { useCallback, useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-
-// Types
-interface ChatMessage {
-  role: "user" | "bot";
-  content: string;
-}
-
-interface Reference {
-  title: string;
-  link?: string;
-  description?: string;
-}
-
-// Mock API function - replace with your actual API
-const sendMessage = async (
-  message: string,
-  options?: { signal?: AbortSignal; model?: string }
-): Promise<{ response: string; references?: { [key: string]: Reference } }> => {
-  // Simulate API delay
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-
-  if (options?.signal?.aborted) {
-    throw new Error("Request aborted");
-  }
-
-  // Mock response - replace with actual API call
-  return {
-    response: `Thank you for your message: "${message}". This is a mock response from the AI agent. The selected model is ${
-      options?.model || "default"
-    }.`,
-    references: {
-      "1": {
-        title: "Sample Reference",
-        link: "https://example.com",
-        description: "This is a sample reference",
-      },
-    },
-  };
-};
 
 // Typewriter hook
 const useTypewriter = (text: string, speed: number = 100) => {
@@ -310,9 +273,7 @@ export default function AgentPage() {
     setIsLoading(false);
     setLoadingText("Thinking...");
     setIsReferencesHidden(true);
-    localStorage.removeItem("agentChatHistory");
-    localStorage.removeItem("agentChatReferences");
-    localStorage.removeItem("agentIsFirstPrompt");
+    startNewSession(); // This will clear all session data and force a new session
     toast({
       title: "Chat Cleared",
       description: "Started a new conversation.",
@@ -413,7 +374,8 @@ export default function AgentPage() {
                           }
                         >
                           {message.role === "bot" &&
-                          message.content === loadingText ? (
+                          (message.content === "Thinking..." ||
+                            (isLoading && index === chatHistory.length - 1)) ? (
                             <div className="flex items-center space-x-2">
                               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
                               <span>{loadingText}</span>
