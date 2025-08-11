@@ -36,8 +36,9 @@ root_agent = Agent(
     name='general_assistant',
     model=settings.GEMINI_MODEL_PRO,
     description=(
-        'A helpful general-purpose AI assistant that can answer questions '
-        'and help with various tasks using Google search when needed.'
+        'A knowledgeable AI assistant for "From First Principles" that can '
+        'help users navigate content, dive deeper into topics, and discover '
+        'insights from the knowledge base using Google search when needed.'
     ),
     instruction=get_general_assistant_instructions(),
     tools=[google_search],
