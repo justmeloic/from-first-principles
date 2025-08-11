@@ -133,6 +133,34 @@ or
 yarn export
 ```
 
+## API Configuration Management
+
+### Frontend Integration Script
+Use the utility script to easily switch between local and ngrok API configurations:
+```bash
+./scripts/switch-api-config.sh ngrok   # Switch to ngrok
+./scripts/switch-api-config.sh local   # Switch to local
+```
+
+This script automatically:
+- Detects the current ngrok tunnel URL
+- Updates your `.env.local` file with the appropriate API base URL
+- Provides clear feedback on the configuration change
+
+#### Usage Examples
+```bash
+# Switch to ngrok tunnel (for production testing)
+./scripts/switch-api-config.sh ngrok
+
+# Switch back to local development
+./scripts/switch-api-config.sh local
+
+# Show current configuration
+./scripts/switch-api-config.sh
+```
+
+**Note:** Remember to restart your Next.js development server after switching configurations to apply the changes.
+
 ## Contributing <a name="contributing"></a>
 
 We encourage contributions to the Web UI! Please refer to the main project's `CONTRIBUTING_DEV.md` for guidelines on contributing code.
