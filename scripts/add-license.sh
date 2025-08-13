@@ -8,8 +8,8 @@ COPYRIGHT_HOLDER="Loïc Muhirwa"
 LICENSE_TYPE="apache"
 CHATMIDDLEWARE_SRC_DIR="services/chatmiddleware/src"
 METADATAMANAGER_SRC_DIR="services/metadatamanager/src"
-WEBUI_SRC_DIR="services/webui/src"
-WEBUI_REACT_SRC_DIR="services/webui_react/src"
+WEBUI_SRC_DIR="services/webui_legacy/src"
+FRONTEND_SRC_DIR="services/frontend/src"
 
 # --- Logging Configuration ---
 TIMESTAMP=$(date +"%Y-%m-%d_%H%M%S")
@@ -116,10 +116,10 @@ else
     log "⚠️  WebUI directory not found: ${WEBUI_SRC_DIR}"
 fi
 
-if [ -d "$WEBUI_REACT_SRC_DIR" ]; then
-    remove_js_license_headers "$WEBUI_REACT_SRC_DIR"
+if [ -d "$FRONTEND_SRC_DIR" ]; then
+    remove_js_license_headers "$FRONTEND_SRC_DIR"
 else
-    log "⚠️  WebUI React directory not found: ${WEBUI_REACT_SRC_DIR}"
+    log "⚠️  Frontend directory not found: ${FRONTEND_SRC_DIR}"
 fi
 log ""
 
@@ -170,12 +170,12 @@ fi
 log ""
 
 # --- Apply license to WebUI React ---
-log "✍️ Applying license headers to webui_react: ${WEBUI_REACT_SRC_DIR}"
-if [ -d "$WEBUI_REACT_SRC_DIR" ]; then
-    if addlicense -c "${COPYRIGHT_HOLDER}" -l "${LICENSE_TYPE}" "${WEBUI_REACT_SRC_DIR}" >> "$LOG_FILE" 2>&1; then
-        log "✅ WebUI React processed successfully."
+log "✍️ Applying license headers to frontend: ${FRONTEND_SRC_DIR}"
+if [ -d "$FRONTEND_SRC_DIR" ]; then
+    if addlicense -c "${COPYRIGHT_HOLDER}" -l "${LICENSE_TYPE}" "${FRONTEND_SRC_DIR}" >> "$LOG_FILE" 2>&1; then
+        log "✅ License headers applied to frontend successfully"
     else
-        log "❌ Error processing webui_react. Check log for details."
+        log "❌ Error processing frontend. Check log for details."
         OVERALL_SUCCESS=false
     fi
 else
