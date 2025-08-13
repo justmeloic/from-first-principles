@@ -1,9 +1,9 @@
 "use client";
 
-import React, { Dispatch, SetStateAction } from "react";
 import { useTheme } from "@/providers/theme-provider";
-import MarkdownRenderer from "./MarkdownRenderer";
 import Link from "next/link";
+import React, { Dispatch, SetStateAction } from "react";
+import MarkdownRenderer from "./MarkdownRenderer";
 
 interface BlogPostArticleProps {
   post: {
@@ -18,7 +18,7 @@ interface BlogPostArticleProps {
   isSimplified: boolean;
   setIsSimplified: Dispatch<SetStateAction<boolean>>;
   markdownContent: string; // Add markdownContent prop
-  children: React.ReactNode; // Add children prop
+  children?: React.ReactNode; // Make children prop optional
 }
 
 const BlogPostArticle: React.FC<BlogPostArticleProps> = ({

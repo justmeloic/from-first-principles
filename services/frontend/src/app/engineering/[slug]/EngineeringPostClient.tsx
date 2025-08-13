@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
-import { useState, useEffect } from "react";
-import { useTheme } from "@/providers/theme-provider";
-import { Button } from "@/components/ui/button";
 import BlogPostArticle from "@/components/Content/BlogPostArticle";
+import { Button } from "@/components/ui/button";
+import { useTheme } from "@/providers/theme-provider";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 
 export default function EngineeringPostClient({
   post,
@@ -58,7 +58,9 @@ export default function EngineeringPostClient({
             isSimplified={isSimplified}
             setIsSimplified={setIsSimplified}
             markdownContent={markdownContent}
-          />
+          >
+            {/* Optional additional content can go here */}
+          </BlogPostArticle>
         </div>
       </div>
     </main>
