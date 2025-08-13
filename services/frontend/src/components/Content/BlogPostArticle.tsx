@@ -1,9 +1,9 @@
 "use client";
 
-import React, { Dispatch, SetStateAction } from "react";
 import { useTheme } from "@/providers/theme-provider";
-import MarkdownRenderer from "./MarkdownRenderer";
 import Link from "next/link";
+import React, { Dispatch, SetStateAction } from "react";
+import MarkdownRenderer from "./MarkdownRenderer";
 
 interface BlogPostArticleProps {
   post: {

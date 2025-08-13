@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
-import { useState, useEffect } from "react";
-import { useTheme } from "@/providers/theme-provider";
-import { Button } from "@/components/ui/button";
 import BlogPostArticle from "@/components/Content/BlogPostArticle";
+import { Button } from "@/components/ui/button";
+import { useTheme } from "@/providers/theme-provider";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 
 export default function BlogPostClient({
   post,

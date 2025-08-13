@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { Github, Linkedin } from "lucide-react";
 import { useTheme } from "@/providers/theme-provider";
+import { Github, Linkedin } from "lucide-react";
 import type React from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner"; // Import toast from sonner
 
 const toastStyles = {
@@ -125,7 +125,7 @@ export function Footer() {
             </h2>
             <p className={` max-w-[300px] mx-auto text-zinc-400`}>
               Information is a privilege, and we believe in sharing it widely.
-              Join us in building "From First Principles" into a valuable
+              Join us in building &ldquo;From First Principles&rdquo; into a valuable
               resource for everyone.
             </p>
           </div>
