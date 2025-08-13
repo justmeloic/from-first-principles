@@ -23,9 +23,11 @@ from loguru import logger as _logger
 
 try:
     from ..app.core.config import settings
+    from .model_factory import create_model
     from .system_instructions import get_general_assistant_instructions
 except ImportError:
     # Handle direct script execution (for quick testing)
+    from model_factory import create_model
     from system_instructions import get_general_assistant_instructions
 
     from src.app.core.config import settings
@@ -39,7 +41,8 @@ class AgentFactory:
         self._agent_cache: Dict[str, Agent] = {}
         self._available_models = settings.AVAILABLE_MODELS
         _logger.info(
-            f'AgentFactory initialized with {len(self._available_models)} available models'
+            f'AgentFactory initialized with {len(self._available_models)} '
+            'available models'
         )
 
     @lru_cache(maxsize=10)
@@ -67,10 +70,16 @@ class AgentFactory:
             # Only add tools if the model supports them
             tools = [google_search] if model_config.get('supports_tools', False) else []
 
+            # Create the model instance using our model factory
+            model_instance = create_model(model_name)
+
             agent = Agent(
                 name=f'assistant_{model_name.replace("-", "_").replace(".", "_")}',
-                model=model_name,
-                description=f'AI assistant using {model_config["display_name"]} - {model_config["description"]}',
+                model=model_instance,
+                description=(
+                    f'AI assistant using {model_config["display_name"]} - '
+                    f'{model_config["description"]}'
+                ),
                 instruction=get_general_assistant_instructions(),
                 tools=tools,
             )
