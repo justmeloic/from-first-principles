@@ -12,7 +12,7 @@ Please include the following information in your report:
 
 *   **Description of the vulnerability:** Provide a detailed explanation of the issue, including how it can be exploited.
 *   **Steps to reproduce:** Outline the specific steps required to reproduce the vulnerability.
-*   **Affected component(s):** Specify the part(s) of the project that are affected (e.g., `services/chatmiddleware`, `webui/src/assets/js/chat.js`).
+*   **Affected component(s):** Specify the part(s) of the project that are affected (e.g., `services/ai`, `services/frontend/src/components`).
 *   **Suggested mitigation (optional):** If you have any suggestions for how to fix the vulnerability, please include them.
 *   **Proof of concept (optional):** If possible, provide a proof of concept or exploit code to demonstrate the vulnerability. Please do not put sensitive information in the PoC.
 *   **Your contact information (optional):** If you would like to be credited for the discovery, please provide your name or preferred handle.
@@ -31,8 +31,9 @@ Once we receive a vulnerability report, we will take the following steps:
 
 This security policy applies to all components of the project, including:
 
-*   **`services/chatmiddleware`:** This component contains the backend service for the chat functionality, including Python code, test suites, and related configuration.
-*   **`webui`:** This component contains the frontend user interface, including HTML, CSS, JavaScript, and static assets.
+*   **`services/ai`:** This component contains the backend AI service with FastAPI, including Python code, test suites, and related configuration.
+*   **`services/frontend`:** This component contains the React-based frontend user interface, including TypeScript/JavaScript, CSS, and static assets.
+*   **`services/webui_legacy`:** This component contains the deprecated HTML/JavaScript frontend (to be removed).
 *   **`docs`:** This directory contains documentation for the project.
 *   **`scripts`:** This directory contains utility scripts.
 *   Any other code, configuration, or data within this repository.

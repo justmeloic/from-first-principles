@@ -1,6 +1,6 @@
 ## Contributing to From First Principles (Development)
 
-We welcome contributions from developers of all skill levels! This guide outlines how you can contribute to the codebase of the From First Principles website, specifically focusing on the Web UI (`services/webui`).
+We welcome contributions from developers of all skill levels! This guide outlines how you can contribute to the codebase of the From First Principles website, specifically focusing on the current frontend (`services/frontend`) and AI backend (`services/ai`).
 
 ### Getting Started
 

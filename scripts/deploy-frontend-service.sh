@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Redirect all output to a log file and also to the console
-exec > >(tee -a logs/deploy-webui_react-service.log) 2>&1
-# Script to checkout main, update it, and deploy the webui service
+exec > >(tee -a logs/deploy-frontend-service.log) 2>&1
+# Script to checkout main, update it, and deploy the frontend service
 
 #set -euo pipefail # Exit on any error
 
@@ -27,8 +27,8 @@ echo "Pulling latest changes from origin main..."
 git pull origin main || exit 1
 
 
-# Deploy the webui service
-cd ../services/webui_react || exit 1
+# Deploy the frontend service
+cd ../services/frontend || exit 1
 
 
 echo "🚀 Starting deployment process..."
