@@ -18,7 +18,7 @@ interface BlogPostArticleProps {
   isSimplified: boolean;
   setIsSimplified: Dispatch<SetStateAction<boolean>>;
   markdownContent: string; // Add markdownContent prop
-  children: React.ReactNode; // Add children prop
+  children?: React.ReactNode; // Make children prop optional
 }
 
 const BlogPostArticle: React.FC<BlogPostArticleProps> = ({

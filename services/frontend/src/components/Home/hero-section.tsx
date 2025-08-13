@@ -6,7 +6,7 @@ import { useEffect, useRef } from "react";
 
 export function HeroSection() {
   const { theme } = useTheme();
-  const backgroundRef = useRef(null); // Create a ref for the background div
+  const backgroundRef = useRef<HTMLDivElement>(null); // Create a ref for the background div
 
   useEffect(() => {
     const backgroundDiv = backgroundRef.current;

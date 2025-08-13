@@ -7,7 +7,7 @@ import type React from "react";
 import { toast } from "sonner"; // Import toast from sonner
 
 const toastStyles = {
-  success: (theme: string) => ({
+  success: (theme: string): React.CSSProperties => ({
     backgroundColor: theme === "dark" ? "#C6A760" : "#C6A760",
     color: theme === "dark" ? "#fff" : "#fff",
     fontSize: "1rem",
@@ -15,7 +15,7 @@ const toastStyles = {
     width: "300px",
     height: "100px",
     boxShadow: "-10px 10px 15px 5px rgba(1, 0.1, 0.1, 0.2)",
-    position: "fixed",
+    position: "fixed" as const,
     top: "50%",
     left: "50%",
     transform: "translate(-50%, -50%)",
@@ -24,7 +24,7 @@ const toastStyles = {
     marginTop: "250px",
     marginBottom: "50px",
   }),
-  error: (theme: string) => ({
+  error: (theme: string): React.CSSProperties => ({
     backgroundColor: theme === "dark" ? "#333" : "#f56565",
     color: theme === "dark" ? "#fff" : "#fff",
     fontSize: "1rem",
@@ -32,7 +32,7 @@ const toastStyles = {
     width: "300px",
     height: "100px",
     boxShadow: "-10px 10px 15px 5px rgba(1, 0.1, 0.1, 0.2)",
-    position: "fixed",
+    position: "fixed" as const,
     top: "50%",
     left: "50%",
     transform: "translate(-50%, -50%)",
@@ -104,7 +104,7 @@ export function Footer() {
     }
   }
 
-  const handleEmailChange = (event) => {
+  const handleEmailChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(event.target.value);
   };
 

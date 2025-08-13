@@ -58,7 +58,9 @@ export default function BlogPostClient({
             isSimplified={isSimplified}
             setIsSimplified={setIsSimplified}
             markdownContent={markdownContent}
-          />
+          >
+            {/* Optional additional content can go here */}
+          </BlogPostArticle>
         </div>
       </div>
     </main>
