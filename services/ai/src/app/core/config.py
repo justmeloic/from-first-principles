@@ -89,6 +89,14 @@ class Settings(BaseSettings):
     GEMINI_MODEL_PRO: str = 'gemini-2.5-pro'
     DEFAULT_MODEL: str = 'gemini-2.5-flash'
 
+    # Model provider settings
+    MODEL_PROVIDER: str = 'gemini'  # 'gemini' or 'ollama'
+
+    # Ollama settings
+    OLLAMA_API_BASE: str = 'http://localhost:11434'
+    OLLAMA_MODEL: str = 'mistral-small3.1'
+    OLLAMA_MODEL_PRO: str = 'llama3.2'
+
     # Authentication settings
     AUTH_SECRET: str
     SESSION_TIMEOUT_HOURS: int = 24
@@ -102,6 +110,7 @@ class Settings(BaseSettings):
             'max_tokens': 4096,
             'supports_tools': True,
             'default_temperature': 0.1,
+            'provider': 'gemini',
         },
         'gemini-2.5-pro': {
             'name': 'gemini-2.5-pro',
@@ -110,6 +119,25 @@ class Settings(BaseSettings):
             'max_tokens': 8192,
             'supports_tools': True,
             'default_temperature': 0.1,
+            'provider': 'gemini',
+        },
+        'mistral-small3.1': {
+            'name': 'mistral-small3.1',
+            'display_name': 'Mistral Small 3.1',
+            'description': 'Mistral Small model with tool support',
+            'max_tokens': 4096,
+            'supports_tools': False,  # Temporarily disable tools for Google Search compatibility
+            'default_temperature': 0.1,
+            'provider': 'ollama',
+        },
+        'llama3.2': {
+            'name': 'llama3.2',
+            'display_name': 'Llama 3.2',
+            'description': 'Meta Llama 3.2 model',
+            'max_tokens': 4096,
+            'supports_tools': False,  # Temporarily disable tools for Google Search compatibility
+            'default_temperature': 0.1,
+            'provider': 'ollama',
         },
     }
 
@@ -120,6 +148,15 @@ class Settings(BaseSettings):
 
     # Development settings
     RESTART_SCRIPT_PATH: str = './scripts/restart-server.sh'
+
+    @field_validator('MODEL_PROVIDER', mode='before')
+    @classmethod
+    def validate_model_provider(cls, v: str) -> str:
+        """Validate model provider is one of the allowed values."""
+        allowed_providers = ['gemini', 'ollama']
+        if v.lower() not in allowed_providers:
+            raise ValueError(f'MODEL_PROVIDER must be one of {allowed_providers}')
+        return v.lower()
 
     @field_validator('LOG_LEVEL', mode='before')
     @classmethod

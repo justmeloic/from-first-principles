@@ -91,7 +91,7 @@ stop: ## Stop the server
 restart: ## Restart the server
 	@echo "$(BLUE)🔄 Restarting server...$(NC)"
 	@chmod +x $(SCRIPTS_DIR)/deploy-server.sh
-	@./$(SCRIPTS_DIR)/deploy-server.sh restart
+	@./$(SCRIPTS_DIR)/deploy-server.sh restart --port 8080
 
 status: ## Check server status
 	@chmod +x $(SCRIPTS_DIR)/deploy-server.sh

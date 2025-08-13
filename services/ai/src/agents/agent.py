@@ -16,28 +16,23 @@
 
 This module configures and instantiates a general-purpose AI assistant that
 can help users with various queries and tasks using Google search to find
-information when needed.
+information when needed. The agent can use either Gemini or Ollama models
+based on the configuration.
 """
 
 from google.adk.agents import Agent
 from google.adk.tools import google_search
 
-try:
-    from ..app.core.config import settings
-    from .system_instructions import get_general_assistant_instructions
-except ImportError:
-    # Handle direct script execution (for quick testing)
-    from system_instructions import get_general_assistant_instructions
-
-    from src.app.core.config import settings
-
+from .model_factory import get_pro_model
+from .system_instructions import get_general_assistant_instructions
 
 root_agent = Agent(
     name='general_assistant',
-    model=settings.GEMINI_MODEL_PRO,
+    model=get_pro_model(),
     description=(
-        'A helpful general-purpose AI assistant that can answer questions '
-        'and help with various tasks using Google search when needed.'
+        'A knowledgeable AI assistant for "From First Principles" that can '
+        'help users navigate content, dive deeper into topics, and discover '
+        'insights from the knowledge base using Google search when needed.'
     ),
     instruction=get_general_assistant_instructions(),
     tools=[google_search],
