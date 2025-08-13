@@ -1,4 +1,4 @@
-name: Deploy webui_react service
+name: Deploy frontend service
 
 on:
   push:
@@ -22,8 +22,8 @@ jobs:
       - name: Install Netlify CLI
         run: npm install -g netlify-cli
 
-      - name: Navigate to webui_react directory
-        run: cd services/webui_react
+      - name: Navigate to frontend directory
+        run: cd services/frontend
 
       - name: Install Dependencies
         run: npm install

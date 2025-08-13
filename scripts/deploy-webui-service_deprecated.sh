@@ -28,7 +28,7 @@ git pull origin main || exit 1
 
 
 # Deploy the webui service
-cd ../services/webui || exit 1
+cd ../services/webui_legacy || exit 1
 ntl deploy --prod --dir src || exit 1
 
 # Recreate dev branch from main

@@ -6,10 +6,9 @@
 # --- Configuration ---
 COPYRIGHT_HOLDER="Loïc Muhirwa"
 LICENSE_TYPE="apache"
-CHATMIDDLEWARE_SRC_DIR="services/chatmiddleware/src"
-METADATAMANAGER_SRC_DIR="services/metadatamanager/src"
-WEBUI_SRC_DIR="services/webui/src"
-WEBUI_REACT_SRC_DIR="services/webui_react/src"
+AI_SRC_DIR="services/ai/src"
+WEBUI_SRC_DIR="services/webui_legacy/src"
+FRONTEND_SRC_DIR="services/frontend/src"
 
 # --- Logging Configuration ---
 TIMESTAMP=$(date +"%Y-%m-%d_%H%M%S")
@@ -98,16 +97,10 @@ log ""
 log "🗑️  Step 1: Removing existing license headers..."
 log ""
 
-if [ -d "$CHATMIDDLEWARE_SRC_DIR" ]; then
-    remove_py_license_headers "$CHATMIDDLEWARE_SRC_DIR"
+if [ -d "$AI_SRC_DIR" ]; then
+    remove_py_license_headers "$AI_SRC_DIR"
 else
-    log "⚠️  Chatmiddleware directory not found: ${CHATMIDDLEWARE_SRC_DIR}"
-fi
-
-if [ -d "$METADATAMANAGER_SRC_DIR" ]; then
-    remove_py_license_headers "$METADATAMANAGER_SRC_DIR"
-else
-    log "⚠️  Metadatamanager directory not found: ${METADATAMANAGER_SRC_DIR}"
+    log "⚠️  AI directory not found: ${AI_SRC_DIR}"
 fi
 
 if [ -d "$WEBUI_SRC_DIR" ]; then
@@ -116,10 +109,10 @@ else
     log "⚠️  WebUI directory not found: ${WEBUI_SRC_DIR}"
 fi
 
-if [ -d "$WEBUI_REACT_SRC_DIR" ]; then
-    remove_js_license_headers "$WEBUI_REACT_SRC_DIR"
+if [ -d "$FRONTEND_SRC_DIR" ]; then
+    remove_js_license_headers "$FRONTEND_SRC_DIR"
 else
-    log "⚠️  WebUI React directory not found: ${WEBUI_REACT_SRC_DIR}"
+    log "⚠️  Frontend directory not found: ${FRONTEND_SRC_DIR}"
 fi
 log ""
 
@@ -127,31 +120,17 @@ log ""
 log "📝 Step 2: Applying new license headers..."
 log ""
 
-# --- Apply license to Chatmiddleware ---
-log "✍️ Applying license headers to chatmiddleware: ${CHATMIDDLEWARE_SRC_DIR}"
-if [ -d "$CHATMIDDLEWARE_SRC_DIR" ]; then
-    if addlicense -c "${COPYRIGHT_HOLDER}" -l "${LICENSE_TYPE}" "${CHATMIDDLEWARE_SRC_DIR}" >> "$LOG_FILE" 2>&1; then
-        log "✅ Chatmiddleware processed successfully."
+# --- Apply license to AI Service ---
+log "✍️ Applying license headers to AI service: ${AI_SRC_DIR}"
+if [ -d "$AI_SRC_DIR" ]; then
+    if addlicense -c "${COPYRIGHT_HOLDER}" -l "${LICENSE_TYPE}" "${AI_SRC_DIR}" >> "$LOG_FILE" 2>&1; then
+        log "✅ AI service processed successfully."
     else
-        log "❌ Error processing chatmiddleware. Check log for details."
+        log "❌ Error processing AI service. Check log for details."
         OVERALL_SUCCESS=false
     fi
 else
-    log "⚠️  Chatmiddleware directory not found, skipping."
-fi
-log ""
-
-# --- Apply license to Metadatamanager ---
-log "✍️ Applying license headers to metadatamanager: ${METADATAMANAGER_SRC_DIR}"
-if [ -d "$METADATAMANAGER_SRC_DIR" ]; then
-    if addlicense -c "${COPYRIGHT_HOLDER}" -l "${LICENSE_TYPE}" "${METADATAMANAGER_SRC_DIR}" >> "$LOG_FILE" 2>&1; then
-        log "✅ Metadatamanager processed successfully."
-    else
-        log "❌ Error processing metadatamanager. Check log for details."
-        OVERALL_SUCCESS=false
-    fi
-else
-    log "⚠️  Metadatamanager directory not found, skipping."
+    log "⚠️  AI service directory not found, skipping."
 fi
 log ""
 
@@ -169,17 +148,17 @@ else
 fi
 log ""
 
-# --- Apply license to WebUI React ---
-log "✍️ Applying license headers to webui_react: ${WEBUI_REACT_SRC_DIR}"
-if [ -d "$WEBUI_REACT_SRC_DIR" ]; then
-    if addlicense -c "${COPYRIGHT_HOLDER}" -l "${LICENSE_TYPE}" "${WEBUI_REACT_SRC_DIR}" >> "$LOG_FILE" 2>&1; then
-        log "✅ WebUI React processed successfully."
+# --- Apply license to Frontend ---
+log "✍️ Applying license headers to frontend: ${FRONTEND_SRC_DIR}"
+if [ -d "$FRONTEND_SRC_DIR" ]; then
+    if addlicense -c "${COPYRIGHT_HOLDER}" -l "${LICENSE_TYPE}" "${FRONTEND_SRC_DIR}" >> "$LOG_FILE" 2>&1; then
+        log "✅ License headers applied to frontend successfully"
     else
-        log "❌ Error processing webui_react. Check log for details."
+        log "❌ Error processing frontend. Check log for details."
         OVERALL_SUCCESS=false
     fi
 else
-    log "⚠️  WebUI React directory not found, skipping."
+    log "⚠️  Frontend directory not found, skipping."
 fi
 log ""
 

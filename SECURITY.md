@@ -10,12 +10,12 @@ To report a vulnerability, please email us at [YOUR_EMAIL_ADDRESS]. Replace this
 
 Please include the following information in your report:
 
-*   **Description of the vulnerability:** Provide a detailed explanation of the issue, including how it can be exploited.
-*   **Steps to reproduce:** Outline the specific steps required to reproduce the vulnerability.
-*   **Affected component(s):** Specify the part(s) of the project that are affected (e.g., `services/chatmiddleware`, `webui/src/assets/js/chat.js`).
-*   **Suggested mitigation (optional):** If you have any suggestions for how to fix the vulnerability, please include them.
-*   **Proof of concept (optional):** If possible, provide a proof of concept or exploit code to demonstrate the vulnerability. Please do not put sensitive information in the PoC.
-*   **Your contact information (optional):** If you would like to be credited for the discovery, please provide your name or preferred handle.
+- **Description of the vulnerability:** Provide a detailed explanation of the issue, including how it can be exploited.
+- **Steps to reproduce:** Outline the specific steps required to reproduce the vulnerability.
+- **Affected component(s):** Specify the part(s) of the project that are affected (e.g., `services/ai`, `services/frontend/src/components`).
+- **Suggested mitigation (optional):** If you have any suggestions for how to fix the vulnerability, please include them.
+- **Proof of concept (optional):** If possible, provide a proof of concept or exploit code to demonstrate the vulnerability. Please do not put sensitive information in the PoC.
+- **Your contact information (optional):** If you would like to be credited for the discovery, please provide your name or preferred handle.
 
 ## Disclosure Process
 
@@ -31,42 +31,43 @@ Once we receive a vulnerability report, we will take the following steps:
 
 This security policy applies to all components of the project, including:
 
-*   **`services/chatmiddleware`:** This component contains the backend service for the chat functionality, including Python code, test suites, and related configuration.
-*   **`webui`:** This component contains the frontend user interface, including HTML, CSS, JavaScript, and static assets.
-*   **`docs`:** This directory contains documentation for the project.
-*   **`scripts`:** This directory contains utility scripts.
-*   Any other code, configuration, or data within this repository.
+- **`services/ai`:** This component contains the backend AI service with FastAPI, including Python code, test suites, and related configuration.
+- **`services/frontend`:** This component contains the React-based frontend user interface, including TypeScript/JavaScript, CSS, and static assets.
+- **`services/webui_legacy`:** This component contains the deprecated HTML/JavaScript frontend (to be removed).
+- **`docs`:** This directory contains documentation for the project.
+- **`scripts`:** This directory contains utility scripts.
+- Any other code, configuration, or data within this repository.
 
 ## Out of Scope
 
 The following are considered out of scope for this security policy:
 
-*   Vulnerabilities in third-party dependencies that are not directly caused by our code. We encourage you to report these vulnerabilities to the maintainers of the respective dependencies.
-*   Vulnerabilities that require physical access to the server or infrastructure.
-*   Social engineering attacks against project contributors or users.
-*   Denial of service attacks.
-*   Reports that do not demonstrate a security impact.
-*   Issues that are already publicly known.
+- Vulnerabilities in third-party dependencies that are not directly caused by our code. We encourage you to report these vulnerabilities to the maintainers of the respective dependencies.
+- Vulnerabilities that require physical access to the server or infrastructure.
+- Social engineering attacks against project contributors or users.
+- Denial of service attacks.
+- Reports that do not demonstrate a security impact.
+- Issues that are already publicly known.
 
 ## Security Best Practices
 
 We strive to follow security best practices in the development and maintenance of this project. These include:
 
-*   **Regular code reviews:** We perform code reviews to identify potential security issues before they are merged into the main branch.
-*   **Dependency management:** We regularly update dependencies to patch known vulnerabilities.
-*   **Secure coding practices:** We follow secure coding guidelines to prevent common vulnerabilities.
-*   **Input validation:** We validate all user inputs to prevent injection attacks.
-*   **Output encoding:** We properly encode output to prevent cross-site scripting (XSS) attacks.
-*   **Authentication and authorization:** We implement appropriate authentication and authorization mechanisms to protect sensitive data and functionality.
-*   **Least privilege:** We follow the principle of least privilege, granting users and processes only the necessary permissions.
+- **Regular code reviews:** We perform code reviews to identify potential security issues before they are merged into the main branch.
+- **Dependency management:** We regularly update dependencies to patch known vulnerabilities.
+- **Secure coding practices:** We follow secure coding guidelines to prevent common vulnerabilities.
+- **Input validation:** We validate all user inputs to prevent injection attacks.
+- **Output encoding:** We properly encode output to prevent cross-site scripting (XSS) attacks.
+- **Authentication and authorization:** We implement appropriate authentication and authorization mechanisms to protect sensitive data and functionality.
+- **Least privilege:** We follow the principle of least privilege, granting users and processes only the necessary permissions.
 
 ## Responsible Disclosure
 
 We appreciate researchers who follow responsible disclosure principles. This means:
 
-*   Giving us reasonable time to fix the vulnerability before publicly disclosing it.
-*   Avoiding actions that could harm users or disrupt the service.
-*   Not exploiting the vulnerability for personal gain or malicious purposes.
+- Giving us reasonable time to fix the vulnerability before publicly disclosing it.
+- Avoiding actions that could harm users or disrupt the service.
+- Not exploiting the vulnerability for personal gain or malicious purposes.
 
 ## Bug Bounty Program
 

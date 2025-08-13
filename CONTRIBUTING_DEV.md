@@ -1,6 +1,6 @@
 ## Contributing to From First Principles (Development)
 
-We welcome contributions from developers of all skill levels! This guide outlines how you can contribute to the codebase of the From First Principles website, specifically focusing on the Web UI (`services/webui`).
+We welcome contributions from developers of all skill levels! This guide outlines how you can contribute to the codebase of the From First Principles website, specifically focusing on the current frontend (`services/frontend`) and AI backend (`services/ai`).
 
 ### Getting Started
 
@@ -12,10 +12,10 @@ We welcome contributions from developers of all skill levels! This guide outline
 
 There are several ways you can contribute to the From First Principles Web UI:
 
-*   **Bug Fixes:** If you encounter a bug or unexpected behavior while browsing the website, please submit an issue on GitHub describing the problem and steps to reproduce it. You can then follow up with a pull request containing the fix.
-*   **New Features:** If you have an idea for a new feature that enhances the user experience or functionality of the website, feel free to submit an issue to discuss it with the project maintainers before diving into coding. This helps ensure your feature aligns with the overall vision for the project.
-*   **Code Style and Quality:** Please adhere to the existing coding style and conventions within the project. This ensures consistent and maintainable code.
-*   **Testing:** When adding new features or making significant code changes, include unit tests to ensure your changes don't introduce regressions.
+- **Bug Fixes:** If you encounter a bug or unexpected behavior while browsing the website, please submit an issue on GitHub describing the problem and steps to reproduce it. You can then follow up with a pull request containing the fix.
+- **New Features:** If you have an idea for a new feature that enhances the user experience or functionality of the website, feel free to submit an issue to discuss it with the project maintainers before diving into coding. This helps ensure your feature aligns with the overall vision for the project.
+- **Code Style and Quality:** Please adhere to the existing coding style and conventions within the project. This ensures consistent and maintainable code.
+- **Testing:** When adding new features or making significant code changes, include unit tests to ensure your changes don't introduce regressions.
 
 ### Pull Request Process
 
@@ -26,7 +26,7 @@ There are several ways you can contribute to the From First Principles Web UI:
 
 ### Additional Considerations
 
-*   **Accessibility:** We prioritize accessibility for all users. When contributing to the Web UI, consider how your changes might affect users with disabilities. You can find resources and best practices for web accessibility online through the World Wide Web Consortium (W3C) Web Accessibility Initiative (WAI): [https://www.w3.org/mission/accessibility/](https://www.w3.org/mission/accessibility/)
-*   **Documentation:** If you introduce significant changes or add new features, consider updating the relevant documentation (like this one) to reflect those changes and help other developers understand the codebase.
+- **Accessibility:** We prioritize accessibility for all users. When contributing to the Web UI, consider how your changes might affect users with disabilities. You can find resources and best practices for web accessibility online through the World Wide Web Consortium (W3C) Web Accessibility Initiative (WAI): [https://www.w3.org/mission/accessibility/](https://www.w3.org/mission/accessibility/)
+- **Documentation:** If you introduce significant changes or add new features, consider updating the relevant documentation (like this one) to reflect those changes and help other developers understand the codebase.
 
 We appreciate your interest in contributing to From First Principles! Following these guidelines will help ensure a smooth and efficient code review process.

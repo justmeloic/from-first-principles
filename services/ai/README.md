@@ -304,7 +304,7 @@ NEXT_PUBLIC_API_BASE_URL=https://abc123.ngrok-free.app
 Use the utility script to easily switch between local and ngrok configurations:
 
 ```bash
-cd ../webui_react
+cd ../frontend
 ./scripts/switch-api-config.sh ngrok   # Switch to ngrok
 ./scripts/switch-api-config.sh local   # Switch to local
 ```

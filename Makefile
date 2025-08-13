@@ -1,12 +1,12 @@
 # Makefile for deploying services
 
-.PHONY: deploy deploy-react reset-dev add-license help clean
+.PHONY: deploy deploy-frontend reset-dev add-license help clean
 
 # Default target
 help:
 	@echo "Available targets:"
 	@echo "  deploy          - Deploy the FFP project"
-	@echo "  deploy-react    - Deploy the React web UI service"
+	@echo "  deploy-frontend - Deploy the frontend web UI service"
 	@echo "  reset-dev       - Reset dev branch from main"
 	@echo "  add-license     - Add license headers to source files"
 	@echo "  clean          - Clean build artifacts and logs"
@@ -18,17 +18,17 @@ deploy:
 	@original_dir="$$PWD"; \
 	trap 'cd "$$original_dir" 2>/dev/null || exit; printf "\nReturned to original directory: %s\n" "$$original_dir"' EXIT; \
 	cd scripts && \
-	chmod +x reset-dev-branch.sh deploy-webui_react-service.sh && \
+	chmod +x reset-dev-branch.sh deploy-frontend-service.sh && \
 	echo "🔄 Running reset-dev-branch.sh..." && \
 	./reset-dev-branch.sh && \
-	echo "🌐 Running deploy-webui_react-service.sh..." && \
-	./deploy-webui_react-service.sh
+	echo "🌐 Running deploy-frontend-service.sh..." && \
+	./deploy-frontend-service.sh
 
-# Deploy the React web UI service
-deploy-react:
-	@echo "🚀 Starting React service deployment..."
-	@chmod +x scripts/deploy-webui_react-service.sh
-	@cd scripts && ./deploy-webui_react-service.sh
+# Deploy the frontend web UI service
+deploy-frontend:
+	@echo "🚀 Starting frontend service deployment..."
+	@chmod +x scripts/deploy-frontend-service.sh
+	@cd scripts && ./deploy-frontend-service.sh
 
 # Reset dev branch from main
 reset-dev:
@@ -45,8 +45,8 @@ add-license:
 # Clean build artifacts and logs
 clean:
 	@echo "🧹 Cleaning build artifacts and logs..."
-	@rm -rf services/webui_react/.next
-	@rm -rf services/webui_react/out
-	@rm -rf services/webui_react/node_modules/.cache
+	@rm -rf services/frontend/.next
+	@rm -rf services/frontend/out
+	@rm -rf services/frontend/node_modules/.cache
 	@rm -f scripts/logs/*.log
 	@echo "✨ Clean completed!"
