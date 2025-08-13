@@ -96,7 +96,7 @@ export function ChatInput({ onSend, isLoading }: ChatInputProps) {
           onKeyDown={handleKeyDown}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          className="min-h-8 md:min-h-12 w-full rounded-t-3xl bg-transparent px-4 pt-4 pb-2 md:py-3 text-sm dark:text-gray-200 outline-none placeholder:text-muted-foreground dark:placeholder:text-gray-500 resize-none overflow-hidden"
+          className="min-h-8 md:min-h-12 w-full rounded-t-3xl bg-transparent px-4 pt-4 pb-2 md:py-3 text-base md:text-sm dark:text-gray-200 outline-none placeholder:text-muted-foreground dark:placeholder:text-gray-500 resize-none overflow-hidden"
           rows={1}
           disabled={isLoading}
         />
