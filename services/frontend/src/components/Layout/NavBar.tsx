@@ -48,15 +48,7 @@ export function NavBar() {
       >
         Engineering
       </Link>
-      <Link
-        href="/search"
-        className={`md:text-[13px] text-[20px] transition-colors md:hover:text-accent hover:text-accent ${
-          theme === "dark" ? "text-gray-300" : "text-gray-800"
-        } md:py-0 py-6`}
-        onClick={() => setIsMobileMenuOpen(false)}
-      >
-        Search
-      </Link>
+
       <Link
         href="/agent"
         className={`md:text-[13px] text-[20px] transition-colors md:hover:text-accent hover:text-accent ${
