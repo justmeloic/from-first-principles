@@ -179,6 +179,23 @@ index-clear: install ## Clear the search index (with confirmation)
 	@echo "$(BLUE)🗑️ Clearing search index...$(NC)"
 	@index-cli clear
 
+index-browse: install ## Browse indexed data
+	@echo "$(BLUE)👀 Browsing indexed data...$(NC)"
+	@index-cli browse --limit 10
+
+index-sample: install ## Show random data samples
+	@echo "$(BLUE)🎲 Showing random samples...$(NC)"
+	@index-cli sample --count 3
+
+index-inspect: install ## Inspect specific post (usage: make index-inspect POST=my-post-slug)
+	@echo "$(BLUE)🔍 Inspecting post: $(POST)...$(NC)"
+	@if [ -z "$(POST)" ]; then \
+		echo "$(RED)❌ Please specify POST=your-post-slug$(NC)"; \
+		echo "$(YELLOW)Example: make index-inspect POST=my-blog-post$(NC)"; \
+		exit 1; \
+	fi
+	@index-cli inspect "$(POST)"
+
 index-help: install ## Show indexing CLI help
 	@index-cli --help
 
