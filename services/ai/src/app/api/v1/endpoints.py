@@ -20,6 +20,7 @@ from src.app.api.v1.routes import (
     agent,
     auth,
     files,
+    search,
     utility,
 )
 
@@ -42,6 +43,12 @@ main_v1_router.include_router(
     files.router,
     prefix='/files',
     tags=['files'],
+)
+
+main_v1_router.include_router(
+    search.router,
+    prefix='/search',
+    tags=['search'],
 )
 
 main_v1_router.include_router(

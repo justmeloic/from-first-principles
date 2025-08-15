@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { MessageResponse, ModelsResponse } from "@/types";
+import { MessageResponse, ModelsResponse, SearchHealth, SearchQuery, SearchResponse, SearchStats } from "@/types";
 
 // Use environment variable with fallback;
 // setting the fallback to an empty string will cause the frontend
@@ -153,4 +153,69 @@ export const logout = async () => {
   localStorage.removeItem('agentChatReferences');
   localStorage.removeItem('agentIsFirstPrompt');
   return response.json();
+};
+
+export const searchContent = async (
+  searchQuery: SearchQuery,
+  options?: { signal?: AbortSignal }
+): Promise<SearchResponse> => {
+  try {
+    const response = await fetch(`${BASE_URL}/api/v1/search/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(searchQuery),
+      signal: options?.signal,
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Failed to search content:', error);
+    throw error;
+  }
+};
+
+export const getSearchStats = async (): Promise<SearchStats> => {
+  try {
+    const response = await fetch(`${BASE_URL}/api/v1/search/stats`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Failed to fetch search stats:', error);
+    throw error;
+  }
+};
+
+export const getSearchHealth = async (): Promise<SearchHealth> => {
+  try {
+    const response = await fetch(`${BASE_URL}/api/v1/search/health`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Failed to check search health:', error);
+    throw error;
+  }
 };

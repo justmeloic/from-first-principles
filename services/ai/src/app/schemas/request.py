@@ -65,3 +65,74 @@ class Query(BaseModel):
                 'model': 'gemini-2.5-pro',
             }
         }
+
+
+class SearchQuery(BaseModel):
+    """Represents a search query for content."""
+
+    query: str = Field(..., min_length=1, description='The search query text')
+    search_type: str = Field(
+        default='semantic',
+        description='Search type: semantic, keyword, or hybrid',
+    )
+    limit: int = Field(
+        default=10,
+        ge=1,
+        le=100,
+        description='Maximum number of results to return',
+    )
+    category_filter: Optional[str] = Field(
+        default=None,
+        description='Filter by category: blog or engineering',
+    )
+    similarity_threshold: float = Field(
+        default=0.5,
+        ge=0.0,
+        le=1.0,
+        description='Minimum similarity score for semantic search',
+    )
+    case_sensitive: bool = Field(
+        default=False,
+        description='Whether keyword search should be case sensitive',
+    )
+
+    @field_validator('query')
+    @classmethod
+    def query_must_not_be_empty(cls, v: str) -> str:
+        """Validates that query is not empty or just whitespace."""
+        if not v.strip():
+            raise ValueError('Query must not be empty or just whitespace')
+        return v.strip()
+
+    @field_validator('search_type')
+    @classmethod
+    def validate_search_type(cls, v: str) -> str:
+        """Validates that search type is supported."""
+        allowed_types = ['semantic', 'keyword', 'hybrid']
+        if v not in allowed_types:
+            raise ValueError(f'Search type must be one of {allowed_types}')
+        return v
+
+    @field_validator('category_filter')
+    @classmethod
+    def validate_category_filter(cls, v: Optional[str]) -> Optional[str]:
+        """Validates that category filter is supported if provided."""
+        if v is not None:
+            allowed_categories = ['blog', 'engineering']
+            if v not in allowed_categories:
+                raise ValueError(f'Category filter must be one of {allowed_categories}')
+        return v
+
+    class Config:
+        """Pydantic configuration."""
+
+        json_schema_extra = {
+            'example': {
+                'query': 'machine learning concepts',
+                'search_type': 'semantic',
+                'limit': 5,
+                'category_filter': 'blog',
+                'similarity_threshold': 0.7,
+                'case_sensitive': False,
+            }
+        }

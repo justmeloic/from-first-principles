@@ -19,7 +19,7 @@ This module defines the Pydantic models for API responses.
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -61,5 +61,66 @@ class AgentResponse(BaseModel):
                 'session_id': 'abc123-def456-ghi789',
                 'model': 'gemini-2.5-pro',
                 'confidence': 0.95,
+            }
+        }
+
+
+class SearchResult(BaseModel):
+    """Represents a single search result."""
+
+    title: str = Field(..., description='Title of the content')
+    category: str = Field(..., description='Category of the content')
+    slug: str = Field(..., description='URL slug of the content')
+    excerpt: str = Field(..., description='Brief excerpt of the content')
+    content: str = Field(..., description='Full content text')
+    score: float = Field(..., description='Relevance score')
+    url: str = Field(..., description='URL to the content')
+    publish_date: str = Field(..., description='Publication date')
+    tags: List[str] = Field(default_factory=list, description='Content tags')
+    metadata: Dict[str, Any] = Field(
+        default_factory=dict, description='Additional metadata'
+    )
+
+
+class SearchResponse(BaseModel):
+    """Represents the response to a search query."""
+
+    query: Dict[str, Any] = Field(..., description='Original search query')
+    results: List[SearchResult] = Field(
+        default_factory=list, description='Search results'
+    )
+    total_results: int = Field(..., description='Total number of results')
+    search_time_ms: float = Field(..., description='Search execution time in ms')
+    metadata: Dict[str, Any] = Field(
+        default_factory=dict, description='Search metadata'
+    )
+
+    class Config:
+        """Pydantic configuration."""
+
+        json_schema_extra = {
+            'example': {
+                'query': {
+                    'query': 'machine learning',
+                    'search_type': 'semantic',
+                    'limit': 5,
+                },
+                'results': [
+                    {
+                        'title': 'Introduction to Machine Learning',
+                        'category': 'blog',
+                        'slug': 'intro-to-ml',
+                        'excerpt': (
+                            'Machine learning is a subset of artificial intelligence...'
+                        ),
+                        'score': 0.95,
+                        'url': '/blog/intro-to-ml',
+                        'publish_date': '2024-01-15',
+                        'tags': ['AI', 'ML', 'fundamentals'],
+                    }
+                ],
+                'total_results': 1,
+                'search_time_ms': 45.2,
+                'metadata': {'search_type': 'semantic'},
             }
         }

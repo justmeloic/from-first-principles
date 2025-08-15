@@ -17,7 +17,7 @@
 This package contains Pydantic schemas for API request and response validation.
 """
 
-from .request import Query
-from .response import AgentResponse
+from .request import Query, SearchQuery
+from .response import AgentResponse, SearchResponse, SearchResult
 
-__all__ = ['Query', 'AgentResponse']
+__all__ = ['Query', 'SearchQuery', 'AgentResponse', 'SearchResponse', 'SearchResult']
