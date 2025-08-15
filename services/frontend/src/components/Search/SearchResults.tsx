@@ -43,10 +43,13 @@ export function SearchResults({
     return (
       <div className="space-y-4">
         {[...Array(3)].map((_, i) => (
-          <Card key={i}>
+          <Card
+            key={i}
+            className="group shadow-md cursor-pointer border-none border-gray-200 dark:border-gray-700  bg-white dark:bg-dark-mode-gray-secondary-bg rounded-3xl"
+          >
             <CardHeader>
               <Skeleton className="h-4 w-3/4" />
-              <Skeleton className="h-3 w-1/2" />
+              <Skeleton className="h-3 w-12 bg-accent/40" />
             </CardHeader>
             <CardContent>
               <Skeleton className="h-3 w-full mb-2" />
