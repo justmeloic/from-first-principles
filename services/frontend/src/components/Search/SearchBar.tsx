@@ -17,7 +17,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Filter, Loader2, Search as SearchIcon } from "lucide-react";
+import { Loader2, Search as SearchIcon, Settings2 } from "lucide-react";
 import { useState } from "react";
 
 interface SearchBarProps {
@@ -105,7 +105,7 @@ export function SearchBar({
                 : "bg-gray-100 dark:bg-dark-mode-gray-secondary-bg text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
             )}
           >
-            <Filter className="h-5 w-5" />
+            <Settings2 className="h-5 w-5" />
           </button>
         </div>
 

@@ -187,6 +187,9 @@ class IndexingConfig(BaseSettings):
     class Config:
         env_prefix = 'INDEXING_'
         case_sensitive = False
+        env_file = '.env.indexing'
+        env_file_encoding = 'utf-8'
+        extra = 'ignore'  # Ignore extra fields from .env file
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -231,17 +234,15 @@ class IndexingConfig(BaseSettings):
 
     def _resolve_paths(self):
         """Convert relative paths to absolute paths."""
-        base_path = Path(__file__).parent.parent.parent
-
-        # Resolve content and database paths
+        # Only resolve paths if they are still relative (not overridden by env vars)
         if not os.path.isabs(self.content.content_root):
-            self.content.content_root = str(base_path / self.content.content_root)
+            self.content.content_root = os.path.abspath(self.content.content_root)
 
         if not os.path.isabs(self.database.db_path):
-            self.database.db_path = str(base_path / self.database.db_path)
+            self.database.db_path = os.path.abspath(self.database.db_path)
 
         if not os.path.isabs(self.processing.cache_dir):
-            self.processing.cache_dir = str(base_path / self.processing.cache_dir)
+            self.processing.cache_dir = os.path.abspath(self.processing.cache_dir)
 
     @classmethod
     def for_raspberry_pi(cls) -> 'IndexingConfig':
@@ -270,16 +271,19 @@ class IndexingConfig(BaseSettings):
 
 
 # Global configuration instance
-config = IndexingConfig()
+_config = None
 
 
 def get_config() -> IndexingConfig:
     """Get the global configuration instance."""
-    return config
+    global _config
+    if _config is None:
+        _config = IndexingConfig()
+    return _config
 
 
 def reload_config(**overrides) -> IndexingConfig:
     """Reload configuration with optional overrides."""
-    global config
-    config = IndexingConfig(**overrides)
-    return config
+    global _config
+    _config = IndexingConfig(**overrides)
+    return _config
