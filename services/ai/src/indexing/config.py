@@ -242,6 +242,11 @@ class IndexingConfig(BaseSettings):
             print(
                 '\033[93m⚠️  No GPU accelerator found, using CPU for embeddings\033[0m'
             )
+            print(
+                '\033[91m💀 WARNING: If running on Raspberry Pi, CPU-only embedding '
+                'generation may cause system instability,\n'
+                '    overheating, or hardware failure! - Loïc :( \033[0m'
+            )
 
     def _resolve_paths(self):
         """Convert relative paths to absolute paths."""
