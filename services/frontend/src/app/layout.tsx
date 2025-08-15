@@ -1,6 +1,7 @@
-import { AgentFloatingButton } from "@/components/Agent/floating-button";
-import { Footer } from "@/components/Layout/footer";
-import { NavBar } from "@/components/Layout/nav-bar";
+import { AgentFloatingButton } from "@/components/Agent/AgentFloatingButton";
+import { Footer } from "@/components/Layout/Footer";
+import { NavBar } from "@/components/Layout/NavBar";
+import { SettingsFloatingButton } from "@/components/Layout/SettingsFloatingButton";
 import { ThemeProvider } from "@/providers/theme-provider";
 import type { Metadata } from "next";
 import { Toaster } from "sonner";
@@ -39,6 +40,7 @@ export default function RootLayout({
             {children}
             <Footer />
             <AgentFloatingButton />
+            <SettingsFloatingButton />
           </div>
         </ThemeProvider>
         <Toaster position="top-center" richColors />

@@ -1,8 +1,8 @@
 "use client";
 
-import { HeroSection } from "@/components/Home/hero-section";
-import { BlogPreviews } from "@/components/Home/blog-preview";
-import { ContactForm } from "@/components/Home/contact-form";
+import { BlogPreviews } from "@/components/Home/BlogPreview";
+import { ContactForm } from "@/components/Home/ContactForm";
+import { HeroSection } from "@/components/Home/HeroSection";
 
 export default function Home() {
   return (

@@ -28,6 +28,7 @@ interface SearchBarProps {
   onToggleFilters: () => void;
   isLoading: boolean;
   showFilters: boolean;
+  hasResults?: boolean; // Add hasResults prop
 }
 
 export function SearchBar({
@@ -38,6 +39,7 @@ export function SearchBar({
   onToggleFilters,
   isLoading,
   showFilters,
+  hasResults = false, // Default to false
 }: SearchBarProps) {
   const [isFocused, setIsFocused] = useState(false);
 
@@ -48,14 +50,22 @@ export function SearchBar({
   };
 
   return (
-    <div className="relative w-full max-w-[95%] md:max-w-4xl mx-auto">
+    <div
+      className={cn(
+        "relative mx-auto transition-all duration-1000 ease-in-out",
+        "w-full max-w-[95%]", // Mobile: keep current width
+        hasResults
+          ? "md:max-w-4xl" // Desktop with results: current full width
+          : "md:max-w-2xl" // Desktop centered: narrower width
+      )}
+    >
       {/* Chat-like interface for all screen sizes */}
       <div
         className={cn(
           "relative flex w-full rounded-full border bg-white dark:bg-black dark:border-gray-600 transition-shadow duration-300 ease-in-out",
           "min-h-16",
           isFocused
-            ? "shadow-[0_1px_6px_1px_rgba(32,33,36,0.12),0_1px_8px_2px_rgba(32,33,36,0.12),0_1px_12px_3px_rgba(32,33,36,0.2)] dark:shadow-[0_4px_8px_0_rgba(0,0,0,0.4)]"
+            ? "shadow-[0_1px_6px_1px_rgba(32,33,36,0.12),0_1px_8px_2px_rgba(32,33,36,0.12),0_1px_12px_3px_rgba(32,33,36,0.2)] dark:shadow-custom-white-input"
             : "shadow-none"
         )}
       >
@@ -92,7 +102,7 @@ export function SearchBar({
               "flex items-center justify-center h-10 w-10 rounded-full mr-3 transition-all duration-200",
               showFilters
                 ? "bg-accent text-white shadow-md"
-                : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+                : "bg-gray-100 dark:bg-dark-mode-gray-secondary-bg text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
             )}
           >
             <Filter className="h-5 w-5" />

@@ -36,7 +36,7 @@ const BlogPostArticle: React.FC<BlogPostArticleProps> = ({
             relative rounded-[2rem] p-6 md:p-16 mt-1 mb-11 duration-500
             ${
               theme === "dark"
-                ? "bg-zinc-900 shadow-none"
+                ? "bg-dark-mode-gray-secondary-bg shadow-none"
                 : "bg-white shadow-custom"
             }
             mt-12

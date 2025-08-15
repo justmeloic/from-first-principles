@@ -66,7 +66,7 @@ export function SearchResultCard({ result }: SearchResultCardProps) {
 
   return (
     <Link href={getLocalUrl()} className="block">
-      <Card className="group shadow-md hover:shadow-2xl hover:shadow-accent/20 transition-all duration-300 cursor-pointer border border-gray-200 dark:border-gray-700 hover:border-accent/30 bg-white dark:bg-gray-950 rounded-3xl hover:-translate-y-1">
+      <Card className="group shadow-md hover:shadow-2xl dark:hover:shadow-custom-white-input transition-all duration-300 cursor-pointer border-none border-gray-200 dark:border-gray-700 hover:border-accent/30 bg-white dark:bg-dark-mode-gray-secondary-bg rounded-3xl hover:-translate-y-1">
         <CardHeader className="pb-4">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">

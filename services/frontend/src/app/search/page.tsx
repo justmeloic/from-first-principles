@@ -204,6 +204,7 @@ export default function SearchPage() {
                   onToggleFilters={toggleFilters}
                   isLoading={isLoading}
                   showFilters={showFilters}
+                  hasResults={results.length > 0}
                 />
 
                 {/* Search Filters */}
