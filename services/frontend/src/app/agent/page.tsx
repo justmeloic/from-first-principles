@@ -1,8 +1,8 @@
 "use client";
 
-import { ChatInput } from "@/components/Agent/chat-input";
-import { MessageActions } from "@/components/Agent/message-actions";
-import { ReferencesPanel } from "@/components/Agent/references-panel";
+import { ChatInput } from "@/components/Agent/ChatInput";
+import { MessageActions } from "@/components/Agent/MessageActions";
+import { ReferencesPanel } from "@/components/Agent/ReferencesPanel";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/toaster";

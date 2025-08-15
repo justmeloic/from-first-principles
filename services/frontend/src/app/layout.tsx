@@ -1,6 +1,6 @@
-import { AgentFloatingButton } from "@/components/Agent/floating-button";
-import { Footer } from "@/components/Layout/footer";
-import { NavBar } from "@/components/Layout/nav-bar";
+import { AgentFloatingButton } from "@/components/Agent/FloatingButton";
+import { Footer } from "@/components/Layout/Footer";
+import { NavBar } from "@/components/Layout/NavBar";
 import { ThemeProvider } from "@/providers/theme-provider";
 import type { Metadata } from "next";
 import { Toaster } from "sonner";

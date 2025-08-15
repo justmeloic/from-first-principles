@@ -1,6 +1,6 @@
 "use client";
 
-import { ThemeToggle } from "@/components/Layout/theme-toggle";
+import { ThemeToggle } from "@/components/Layout/ThemeToggle";
 import { useTheme } from "@/providers/theme-provider";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
