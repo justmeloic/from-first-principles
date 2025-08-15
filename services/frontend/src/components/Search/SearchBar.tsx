@@ -77,7 +77,7 @@ export function SearchBar({
         {/* Input */}
         <input
           type="text"
-          placeholder="Search through our content using semantic or keyword search..."
+          placeholder="Search through our knowledge base..."
           value={query}
           onChange={(e) => onQueryChange(e.target.value)}
           onKeyPress={handleKeyPress}
