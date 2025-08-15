@@ -470,8 +470,9 @@ class IndexingPipeline:
             # Execute search
             results = search_query.to_list()
 
-            # Format results
-            formatted_results = []
+            # Format and deduplicate results
+            # First, collect all results with scores
+            candidate_results = {}
             for result in results:
                 # LanceDB returns squared Euclidean distance
                 distance = result.get('_distance', float('inf'))
@@ -484,20 +485,31 @@ class IndexingPipeline:
 
                 # Apply similarity threshold (default 0.5 for balanced results)
                 if similarity_score >= similarity_threshold:
-                    formatted_results.append(
-                        {
-                            'title': result.get('title', ''),
-                            'category': result.get('category', ''),
-                            'slug': result.get('post_slug', ''),
-                            'content': result.get('content', ''),
-                            'excerpt': result.get('content', '')[:200] + '...',
-                            'score': similarity_score,
-                            'distance': distance,
-                            'publish_date': result.get('publish_date', ''),
-                            'tags': result.get('tags', []),
-                            'url': result.get('url', ''),
-                        }
-                    )
+                    slug = result.get('post_slug', '')
+
+                    formatted_result = {
+                        'title': result.get('title', ''),
+                        'category': result.get('category', ''),
+                        'slug': slug,
+                        'content': result.get('content', ''),
+                        'excerpt': result.get('content', '')[:200] + '...',
+                        'score': similarity_score,
+                        'distance': distance,
+                        'publish_date': result.get('publish_date', ''),
+                        'tags': result.get('tags', []),
+                        'url': result.get('url', ''),
+                    }
+
+                    # Keep only the best result per slug (article)
+                    if (
+                        slug not in candidate_results
+                        or similarity_score > candidate_results[slug]['score']
+                    ):
+                        candidate_results[slug] = formatted_result
+
+            # Convert to list and sort by score
+            formatted_results = list(candidate_results.values())
+            formatted_results.sort(key=lambda x: x['score'], reverse=True)
 
             return formatted_results
 

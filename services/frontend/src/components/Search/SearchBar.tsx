@@ -102,7 +102,7 @@ export function SearchBar({
               "flex items-center justify-center h-10 w-10 rounded-full mr-3 transition-all duration-200",
               showFilters
                 ? "bg-accent text-white shadow-md"
-                : "bg-gray-100 dark:bg-dark-mode-gray-secondary-bg text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+                : "bg-gray-100 dark:bg-dark-mode-gray-secondary-bg text-gray-600 dark:text-gray-300 hover:text-white hover:bg-accent dark:hover:text-white dark:hover:bg-accent"
             )}
           >
             <Settings2 className="h-5 w-5" />
