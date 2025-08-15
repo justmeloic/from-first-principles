@@ -27,11 +27,14 @@ help: ## Show this help message
 	@awk 'BEGIN {FS = ":.*##"; printf "\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  $(GREEN)%-15s$(NC) %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
 	@echo ""
 	@echo "$(YELLOW)Examples:$(NC)"
-	@echo "  make setup     # Initial project setup"
-	@echo "  make dev       # Start development server"
-	@echo "  make prod      # Start production server"
-	@echo "  make test      # Run tests"
-	@echo "  make logs      # View server logs"
+	@echo "  make setup         # Initial project setup"
+	@echo "  make dev           # Start development server"
+	@echo "  make prod          # Start production server"
+	@echo "  make test          # Run tests"
+	@echo "  make logs          # View server logs"
+	@echo "  make index-test    # Test indexing pipeline"
+	@echo "  make index-all     # Index all content"
+	@echo "  make index-search  # Run example search"
 
 # Setup and Installation
 setup: ## Complete project setup (environment + dependencies)
@@ -47,7 +50,8 @@ install: ## Install dependencies and setup virtual environment
 		$(UV) venv; \
 	fi
 	@$(UV) sync
-	@echo "$(GREEN)✅ Dependencies installed$(NC)"
+	@$(UV) pip install -e .
+	@echo "$(GREEN)✅ Dependencies installed and package installed in editable mode$(NC)"
 
 env-check: ## Check if .env file exists and validate configuration
 	@echo "$(BLUE)🔍 Checking environment configuration...$(NC)"
@@ -141,6 +145,42 @@ format: install ## Format code with ruff
 
 check: lint test ## Run all checks (lint + test)
 	@echo "$(GREEN)✅ All checks completed$(NC)"
+
+# Content Indexing
+index-test: install ## Test the indexing pipeline configuration
+	@echo "$(BLUE)🧪 Testing indexing pipeline...$(NC)"
+	@index-cli test
+
+index-all: install ## Index all blog content
+	@echo "$(BLUE)📚 Indexing all content...$(NC)"
+	@index-cli index
+
+index-blog: install ## Index only blog category content
+	@echo "$(BLUE)📝 Indexing blog content...$(NC)"
+	@index-cli index --category blog
+
+index-engineering: install ## Index only engineering category content
+	@echo "$(BLUE)⚙️ Indexing engineering content...$(NC)"
+	@index-cli index --category engineering
+
+index-stats: install ## Show indexing statistics
+	@echo "$(BLUE)📊 Showing indexing statistics...$(NC)"
+	@index-cli stats
+
+index-search: install ## Run example semantic search
+	@echo "$(BLUE)🔍 Example semantic search...$(NC)"
+	@index-cli search "machine learning" --limit 3
+
+index-search-keyword: install ## Run example keyword search
+	@echo "$(BLUE)🔤 Example keyword search...$(NC)"
+	@index-cli search "python" --mode keyword --limit 3
+
+index-clear: install ## Clear the search index (with confirmation)
+	@echo "$(BLUE)🗑️ Clearing search index...$(NC)"
+	@index-cli clear
+
+index-help: install ## Show indexing CLI help
+	@index-cli --help
 
 # Maintenance
 clean: ## Clean up temporary files and caches
