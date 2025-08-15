@@ -53,3 +53,62 @@ export interface QueryRequest {
   text: string;
   model?: string;
 }
+
+export interface SearchQuery {
+  query: string;
+  search_type: 'semantic' | 'keyword' | 'hybrid';
+  limit?: number;
+  category_filter?: 'blog' | 'engineering';
+  similarity_threshold?: number;
+  case_sensitive?: boolean;
+}
+
+export interface SearchResult {
+  title: string;
+  category: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  score: number;
+  url: string;
+  publish_date: string;
+  tags: string[];
+  metadata: Record<string, any>;
+}
+
+export interface SearchResponse {
+  query: Record<string, any>;
+  results: SearchResult[];
+  total_results: number;
+  search_time_ms: number;
+  metadata: Record<string, any>;
+}
+
+export interface SearchStats {
+  database_available: boolean;
+  categories: Record<string, {
+    posts: number;
+    chunks: number;
+    last_updated: string;
+  }>;
+  database: {
+    location: string;
+    table_name: string;
+    size: string;
+  };
+  embedding_info: {
+    name: string;
+    device: string;
+    max_seq_length: number;
+    embedding_dimension: number;
+  };
+  total_chunks: number;
+}
+
+export interface SearchHealth {
+  status: string;
+  pipeline_available: boolean;
+  database_available: boolean;
+  test_search_successful: boolean;
+  sample_results_count: number;
+}
