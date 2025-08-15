@@ -1,6 +1,6 @@
 {
-  "name": "webui",
-  "version": "2.0.0",
+  "name": "from-first-principles",
+  "version": "0.9.1",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -8,7 +8,10 @@
     "build": "npm run clean && next build",
     "start": "next start",
     "lint": "next lint",
-    "deploy": "./deploy.sh"
+    "release": "standard-version && mv CHANGELOG.md ../../CHANGELOG.md",
+    "release:major": "standard-version --release-as major && mv CHANGELOG.md ../../CHANGELOG.md",
+    "release:minor": "standard-version --release-as minor && mv CHANGELOG.md ../../CHANGELOG.md",
+    "release:patch": "standard-version --release-as patch && mv CHANGELOG.md ../../CHANGELOG.md"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.744.0",
@@ -66,6 +69,7 @@
     "remark-gfm": "^4.0.1",
     "remark-math": "^6.0.0",
     "sonner": "^1.7.4",
+    "standard-version": "^9.5.0",
     "tailwind-merge": "^2.5.5",
     "tailwindcss": "latest",
     "tailwindcss-animate": "^1.0.7",
@@ -79,12 +83,12 @@
     "@types/node": "^22",
     "@types/react": "^18",
     "@types/react-dom": "^18",
-    "postcss": "^8",
-    "tailwindcss": "^3.4.17",
-    "typescript": "^5",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "eslint": "^8.0.0",
-    "eslint-config-next": "14.2.23"
+    "eslint-config-next": "14.2.23",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5"
   }
 }
