@@ -53,16 +53,25 @@ def configure_gcp_environment() -> None:
 
     This configuration is essential when GOOGLE_GENAI_USE_VERTEXAI=TRUE as the
     VertexAI service will be accessed through the GCP platform.
+    Note: GCP configuration is now optional and will only be set if
+    environment variables are available.
     """
     load_dotenv()
 
-    if not all([settings.GOOGLE_CLOUD_PROJECT, settings.GOOGLE_CLOUD_LOCATION]):
-        raise ValueError(
-            'Missing required GCP env vars: GOOGLE_CLOUD_PROJECT and/or '
-            'GOOGLE_CLOUD_LOCATION'
-        )
-    os.environ['GOOGLE_CLOUD_PROJECT'] = settings.GOOGLE_CLOUD_PROJECT
-    os.environ['GOOGLE_CLOUD_LOCATION'] = settings.GOOGLE_CLOUD_LOCATION
+    # Optional GCP configuration - only set if variables are available
+    google_project = os.getenv('GOOGLE_CLOUD_PROJECT')
+    google_location = os.getenv('GOOGLE_CLOUD_LOCATION')
+
+    if google_project:
+        os.environ['GOOGLE_CLOUD_PROJECT'] = google_project
+        _logger.info(f"Set GOOGLE_CLOUD_PROJECT: {google_project}")
+
+    if google_location:
+        os.environ['GOOGLE_CLOUD_LOCATION'] = google_location
+        _logger.info(f"Set GOOGLE_CLOUD_LOCATION: {google_location}")
+
+    if not google_project and not google_location:
+        _logger.info("No GCP environment variables found - continuing without GCP config")
 
 
 @asynccontextmanager
