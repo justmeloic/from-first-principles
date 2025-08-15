@@ -224,13 +224,29 @@ class IndexingConfig(BaseSettings):
             self.processing.max_memory_usage_mb = 1024
             self.processing.max_workers = 4
 
-        # Detect best device for embeddings
+        # Detect best device for embeddings with colored output
         if torch.cuda.is_available():
             self.embedding.device = 'cuda'
+            print(
+                '\033[92m🚀 GPU Accelerator detected! '
+                'Loading embeddings to CUDA device\033[0m'
+            )
         elif hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
             self.embedding.device = 'mps'
+            print(
+                '\033[92m🚀 MPS Accelerator detected! '
+                'Loading embeddings to Apple Silicon GPU\033[0m'
+            )
         else:
             self.embedding.device = 'cpu'
+            print(
+                '\033[93m⚠️  No GPU accelerator found, using CPU for embeddings\033[0m'
+            )
+            print(
+                '\033[91m💀 WARNING: If running on Raspberry Pi, CPU-only embedding '
+                'generation may cause system instability,\n'
+                '    overheating, or hardware failure! - Loïc :( \033[0m'
+            )
 
     def _resolve_paths(self):
         """Convert relative paths to absolute paths."""
