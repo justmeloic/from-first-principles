@@ -6,11 +6,15 @@
 ![GCP](https://img.shields.io/badge/Google_Cloud-4285F4?logo=google-cloud&logoColor=white)
 ![Ollama](https://img.shields.io/badge/Ollama-Local_AI-00B4D8?logo=ollama&logoColor=white)
 
-AI backend service for the From First Principles platform, providing intelligent chat capabilities powered by Google's Gemini models and local Ollama models.
+AI backend service for the From First Principles platform, providing intelligent chat capabilities and semantic content indexing powered by Google's Gemini models, local Ollama models, and modern vector search technology.
 
 ## Overview
 
-This service provides a FastAPI-based backend that powers the AI chat functionality for the From First Principles website. It features:
+This service provides a comprehensive AI platform with two main components:
+
+### 🤖 Chat API Service
+
+A FastAPI-based backend that powers intelligent chat functionality with:
 
 - **Multi-Model Support**: Choose between Google Gemini models or local Ollama models
 - **Session Management**: Persistent conversation history across multiple interactions
@@ -18,11 +22,29 @@ This service provides a FastAPI-based backend that powers the AI chat functional
 - **Static File Serving**: Integrated frontend serving capabilities
 - **Production Ready**: Deployment scripts and production configurations
 
+### 📚 Content Indexing System
+
+A modern semantic search pipeline that transforms your blog content into an intelligent, searchable knowledge base:
+
+- **🧠 Dual Search Modes**: Semantic search using AI embeddings for conceptual matching, plus traditional keyword search for exact terms
+- **⚡ High Performance**: Vector similarity using LanceDB with GPU acceleration and intelligent caching
+- **🎨 Modern CLI**: Beautiful `index-cli` interface with rich terminal output, progress tracking, and comprehensive help
+- **🔧 Developer Friendly**: Complete Python API, detailed statistics, error handling, and extensive documentation
+- **📊 Smart Processing**: Automatic text chunking, metadata extraction, and embedding generation with 384-dimensional vectors
+
+**How it Works**: The system processes your markdown blog posts, splits them into semantic chunks, generates AI embeddings using sentence transformers, and stores everything in a high-performance vector database. This enables both conceptual similarity search ("find posts about machine learning") and exact keyword matching ("find posts mentioning 'LanceDB'").
+
+**Perfect For**: Content discovery, research assistance, finding related articles, and building intelligent search experiences for your blog readers.
+
+👀 **For complete technical details, architecture diagrams, and API documentation**, see the [**Indexing System Documentation**](src/indexing/README.md).
+
 ## Architecture
 
 ```mermaid
 graph TD
     A[Frontend - fromfirstprinciple.com] --> B[AI Service API]
+    A --> K[Content Search]
+
     B --> C[Google ADK Session Management]
     B --> D{Model Provider}
     C --> E[In-Memory Session Store]
@@ -31,12 +53,25 @@ graph TD
     F --> H[Vertex AI / Google AI Studio]
     G --> I[Local Ollama Server]
 
+    K --> L[Indexing Pipeline]
+    L --> M[Content Loader]
+    L --> N[Text Processor]
+    L --> O[Embedding Generator]
+    L --> P[LanceDB Vector Store]
+
+    M --> Q[Blog Markdown Files]
+    N --> R[Text Chunks]
+    O --> S[Vector Embeddings]
+    P --> T[Semantic Search Results]
+
     style A fill:#e3f2fd
     style B fill:#f3e5f5
     style C fill:#e8f5e8
     style D fill:#fff9c4
     style F fill:#fff3e0
     style G fill:#e8f5e8
+    style L fill:#fce4ec
+    style P fill:#e8f5e8
 ```
 
 ## Development Setup
@@ -48,14 +83,61 @@ graph TD
 - Google Cloud CLI (for Vertex AI)
 - ngrok (for production deployment)
 
+### Project Structure
+
+```
+services/ai/
+├── src/
+│   ├── app/                 # FastAPI chat service
+│   │   ├── api/            # API endpoints
+│   │   ├── core/           # Core functionality
+│   │   └── main.py         # FastAPI application
+│   ├── agents/             # AI model agents
+│   └── indexing/           # Content indexing pipeline
+│       ├── main.py         # CLI entry point
+│       ├── builder.py      # Main pipeline orchestrator
+│       ├── loader.py       # Markdown content loader
+│       ├── embedder.py     # Vector embedding generator
+│       ├── database.py     # LanceDB vector store
+│       └── README.md       # Detailed indexing docs
+├── data/
+│   ├── content/            # Blog markdown files
+│   └── lancedb/           # Vector database
+├── scripts/               # Deployment scripts
+└── CLI_USAGE.md          # CLI documentation
+```
+
 ### Installation
 
-1. **Install dependencies**:
+1. **Clone and setup environment**:
 
 ```bash
+git clone <repository-url>
+cd services/ai
+
+# Create virtual environment and install dependencies
 uv venv
 uv sync
+
+# Install the package in editable mode (enables index-cli command)
+uv pip install -e .
 ```
+
+2. **Verify installation**:
+
+```bash
+# Test that the CLI is properly installed
+index-cli --help
+
+# Test the indexing pipeline
+index-cli test
+```
+
+This installs all dependencies including:
+
+- **Chat Service**: FastAPI, Google ADK, session management
+- **Indexing Pipeline**: sentence-transformers, LanceDB, typer, rich
+- **CLI Tools**: Modern `index-cli` command with beautiful output
 
 2. **Configure environment**:
 
@@ -430,6 +512,125 @@ Service logs are available in the `logs/` directory:
 
 - `access.log`: HTTP request logs
 - `error.log`: Error and debug logs
+
+4. **Quick Start**:
+
+```bash
+# Test the indexing pipeline
+index-cli test
+
+# Start the chat API service
+./scripts/deploy-server.sh start --dev
+
+# Index your blog content
+index-cli index
+
+# Search indexed content
+index-cli search "machine learning strategy"
+```
+
+## Content Indexing CLI
+
+The AI service includes a modern command-line interface for indexing and searching blog content using semantic embeddings.
+
+### Quick Start
+
+```bash
+# Test the indexing pipeline
+index-cli test
+
+# Index all content
+index-cli index
+
+# Search content
+index-cli search "machine learning strategy"
+
+# View statistics
+index-cli stats
+```
+
+### Installation
+
+The CLI is automatically available after installing project dependencies:
+
+```bash
+pip install -e .
+```
+
+### Available Commands
+
+- **`index-cli test`** - Test pipeline configuration and dependencies
+- **`index-cli index`** - Index blog content with optional category filtering
+- **`index-cli search`** - Semantic search with similarity scoring
+- **`index-cli stats`** - Show indexing statistics and database info
+- **`index-cli clear`** - Clear index data with confirmation prompts
+- **`index-cli config`** - Display current configuration settings
+
+### Features
+
+- 🎨 **Beautiful Output**: Rich terminal formatting with colors, tables, and progress bars
+- 🔍 **Smart Search**: Semantic similarity search using sentence transformers
+- ⚡ **Performance**: Efficient vector database with LanceDB and intelligent caching
+- 🛠 **Developer Friendly**: Comprehensive error handling and detailed statistics
+
+### Examples
+
+```bash
+# Complete workflow
+index-cli test
+index-cli index
+index-cli search "productivity and learning"
+
+# Category-specific operations
+index-cli index --category blog
+index-cli search "parallel computing" --category engineering
+
+# Development workflow
+index-cli index --category blog --slug abstraction
+index-cli clear --category blog --yes
+```
+
+For detailed usage information, see [CLI_USAGE.md](CLI_USAGE.md).
+
+## Indexing Package (`src/indexing/`)
+
+The indexing package provides a complete semantic search solution with dual search modes (semantic AI similarity and keyword text matching), modern CLI tooling, and high-performance vector storage.
+
+### Quick Overview
+
+```bash
+# Test your setup
+index-cli test
+
+# Index all blog content
+index-cli index
+
+# Semantic search (AI-powered)
+index-cli search "machine learning concepts"
+
+# Keyword search (text matching)
+index-cli search "exact phrase" --mode keyword
+
+# View system statistics
+index-cli stats
+```
+
+### Architecture Highlights
+
+- **🧠 Semantic Search**: AI embeddings with vector similarity for conceptual matching
+- **🔤 Keyword Search**: Traditional text search with frequency scoring and term matching
+- **⚡ High Performance**: LanceDB vector database with GPU acceleration
+- **🎨 Modern CLI**: Rich terminal interface with progress bars and colored output
+- **📊 Smart Processing**: Intelligent chunking, metadata extraction, and batch operations
+
+### Use Cases
+
+- **Content Discovery**: Help users find relevant blog posts by meaning
+- **Research Assistant**: Semantic search for writing and research workflows
+- **SEO Enhancement**: Better content organization and related post suggestions
+- **Developer Tools**: API integration for building custom search experiences
+
+📖 **For complete technical documentation, process flow diagrams, search mode comparisons, and API reference**, see the [**Indexing System Documentation**](src/indexing/README.md).
 
 ## Contributing
 
