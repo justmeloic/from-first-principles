@@ -9,6 +9,10 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
 echo "🚀 Starting FastAPI development server..."
 
+# Kill any existing processes on port 8081
+echo "🛑 Stopping any existing servers on port 8081..."
+pkill -f 8081 || true
+
 # Navigate to project root
 cd "$PROJECT_ROOT"
 

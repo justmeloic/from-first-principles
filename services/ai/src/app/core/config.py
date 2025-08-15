@@ -77,13 +77,6 @@ class Settings(BaseSettings):
     # Frontend URL for CORS
     FRONTEND_URL: str = 'http://localhost:3000'
 
-    # Google Cloud settings
-    GOOGLE_CLOUD_PROJECT: str
-    GOOGLE_CLOUD_LOCATION: str
-    GCS_BUCKET_NAME: str
-    SERVICE_ACCOUNT_EMAIL: str
-    SIGNED_URL_LIFETIME: int
-
     # Model settings
     GEMINI_MODEL: str = 'gemini-2.5-flash'
     GEMINI_MODEL_PRO: str = 'gemini-2.5-pro'
@@ -126,7 +119,7 @@ class Settings(BaseSettings):
             'display_name': 'Mistral Small 3.1',
             'description': 'Mistral Small model with tool support',
             'max_tokens': 4096,
-            'supports_tools': False,  # Temporarily disable tools for Google Search compatibility
+            'supports_tools': False,  # Temporarily disable tools
             'default_temperature': 0.1,
             'provider': 'ollama',
         },
@@ -135,16 +128,11 @@ class Settings(BaseSettings):
             'display_name': 'Llama 3.2',
             'description': 'Meta Llama 3.2 model',
             'max_tokens': 4096,
-            'supports_tools': False,  # Temporarily disable tools for Google Search compatibility
+            'supports_tools': False,  # Temporarily disable tools
             'default_temperature': 0.1,
             'provider': 'ollama',
         },
     }
-
-    # Data configuration
-    FILE_ACCESS_METHOD: str = 'GCS'
-    TESTDATA_DIR: str = 'testdata'
-    AGREEMENT_MAPPING_CSV: str = 'Agreement_Mapping_with_Filenames.csv'
 
     # Development settings
     RESTART_SCRIPT_PATH: str = './scripts/restart-server.sh'
@@ -165,15 +153,6 @@ class Settings(BaseSettings):
         allowed_levels = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
         if v.upper() not in allowed_levels:
             raise ValueError(f'LOG_LEVEL must be one of {allowed_levels}')
-        return v.upper()
-
-    @field_validator('FILE_ACCESS_METHOD', mode='before')
-    @classmethod
-    def validate_file_access_method(cls, v: str) -> str:
-        """Validate file access method is one of the allowed values."""
-        allowed_methods = ['GCS', 'LOCAL']
-        if v.upper() not in allowed_methods:
-            raise ValueError(f'FILE_ACCESS_METHOD must be one of {allowed_methods}')
         return v.upper()
 
     @property
