@@ -85,7 +85,7 @@ export function NavBar() {
             theme === "dark" ? "text-gray-300" : "text-gray-800"
           } md:py-0 py-6`}
         >
-          Contact us
+          Contact
         </button>
       ) : (
         <Link

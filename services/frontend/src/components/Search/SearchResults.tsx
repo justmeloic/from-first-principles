@@ -66,7 +66,7 @@ export function SearchResults({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div className="text-sm text-gray-600 dark:text-gray-300">
+        <div className="text-sm text-gray-600 dark:text-gray-300 ml-3">
           {totalResults > 0 && (
             <>
               Found {totalResults} result{totalResults !== 1 ? "s" : ""} in{" "}

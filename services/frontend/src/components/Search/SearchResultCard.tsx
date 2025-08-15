@@ -106,9 +106,7 @@ export function SearchResultCard({ result }: SearchResultCardProps) {
                 {result.excerpt}
               </p>
             )}
-            <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed line-clamp-3">
-              {truncateContent(result.content, 280)}
-            </p>
+
             {result.tags && result.tags.length > 0 && (
               <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100 dark:border-gray-800">
                 {result.tags.slice(0, 5).map((tag, index) => (
@@ -132,7 +130,7 @@ export function SearchResultCard({ result }: SearchResultCardProps) {
             )}
 
             {/* Read More Button */}
-            <div className="flex justify-end pt-3">
+            <div className="hidden md:flex justify-end ">
               <Button
                 variant="ghost"
                 size="sm"
