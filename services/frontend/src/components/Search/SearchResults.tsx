@@ -88,7 +88,10 @@ export function SearchResults({
 
       <div className="space-y-4">
         {results.map((result, index) => (
-          <SearchResultCard key={`${result.slug}-${index}`} result={result} />
+          <SearchResultCard
+            key={`${result.slug}-${result.score}-${index}`}
+            result={result}
+          />
         ))}
       </div>
     </div>

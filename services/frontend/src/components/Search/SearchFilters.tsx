@@ -27,7 +27,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 
 interface SearchFiltersProps {
@@ -64,13 +63,18 @@ export function SearchFilters({
   return (
     <Collapsible open={showFilters}>
       <CollapsibleContent>
-        <Card>
+        <Card className="shadow-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 rounded-3xl">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium">
+              <CardTitle className="text-sm font-medium text-gray-900 dark:text-white">
                 Search Filters
               </CardTitle>
-              <Button variant="ghost" size="sm" onClick={onResetFilters}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onResetFilters}
+                className="text-accent hover:text-accent hover:bg-accent/10 rounded-2xl"
+              >
                 Reset
               </Button>
             </div>
@@ -79,24 +83,39 @@ export function SearchFilters({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Search Type */}
               <div className="space-y-2">
-                <Label htmlFor="search-type" className="text-xs font-medium">
+                <Label
+                  htmlFor="search-type"
+                  className="text-xs font-medium text-gray-700 dark:text-gray-300"
+                >
                   Search Type
                 </Label>
                 <Select value={searchType} onValueChange={onSearchTypeChange}>
-                  <SelectTrigger id="search-type">
+                  <SelectTrigger
+                    id="search-type"
+                    className="rounded-2xl border border-gray-200 dark:border-gray-700"
+                  >
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="semantic">Semantic</SelectItem>
-                    <SelectItem value="keyword">Keyword</SelectItem>
-                    <SelectItem value="hybrid">Hybrid</SelectItem>
+                  <SelectContent className="rounded-2xl">
+                    <SelectItem className="rounded-xl" value="semantic">
+                      Semantic
+                    </SelectItem>
+                    <SelectItem className="rounded-xl" value="keyword">
+                      Keyword
+                    </SelectItem>
+                    <SelectItem className="rounded-xl" value="hybrid">
+                      Hybrid
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               {/* Category Filter */}
               <div className="space-y-2">
-                <Label htmlFor="category" className="text-xs font-medium">
+                <Label
+                  htmlFor="category"
+                  className="text-xs font-medium text-gray-700 dark:text-gray-300"
+                >
                   Category
                 </Label>
                 <Select
@@ -109,34 +128,57 @@ export function SearchFilters({
                     )
                   }
                 >
-                  <SelectTrigger id="category">
+                  <SelectTrigger
+                    id="category"
+                    className="rounded-2xl border border-gray-200 dark:border-gray-700"
+                  >
                     <SelectValue placeholder="All categories" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All categories</SelectItem>
-                    <SelectItem value="blog">Blog</SelectItem>
-                    <SelectItem value="engineering">Engineering</SelectItem>
+                  <SelectContent className="rounded-2xl">
+                    <SelectItem className="rounded-xl" value="all">
+                      All categories
+                    </SelectItem>
+                    <SelectItem className="rounded-xl" value="blog">
+                      Blog
+                    </SelectItem>
+                    <SelectItem className="rounded-xl" value="engineering">
+                      Engineering
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               {/* Results Limit */}
               <div className="space-y-2">
-                <Label htmlFor="limit" className="text-xs font-medium">
+                <Label
+                  htmlFor="limit"
+                  className="text-xs font-medium text-gray-700 dark:text-gray-300"
+                >
                   Results Limit
                 </Label>
                 <Select
                   value={limit.toString()}
                   onValueChange={(value) => onLimitChange(parseInt(value))}
                 >
-                  <SelectTrigger id="limit">
+                  <SelectTrigger
+                    id="limit"
+                    className="rounded-2xl border border-gray-200 dark:border-gray-700"
+                  >
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="5">5 results</SelectItem>
-                    <SelectItem value="10">10 results</SelectItem>
-                    <SelectItem value="20">20 results</SelectItem>
-                    <SelectItem value="50">50 results</SelectItem>
+                  <SelectContent className="rounded-2xl">
+                    <SelectItem className="rounded-xl" value="5">
+                      5 results
+                    </SelectItem>
+                    <SelectItem className="rounded-xl" value="10">
+                      10 results
+                    </SelectItem>
+                    <SelectItem className="rounded-xl" value="20">
+                      20 results
+                    </SelectItem>
+                    <SelectItem className="rounded-xl" value="50">
+                      50 results
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -146,7 +188,7 @@ export function SearchFilters({
                 <div className="space-y-2">
                   <Label
                     htmlFor="case-sensitive"
-                    className="text-xs font-medium"
+                    className="text-xs font-medium text-gray-700 dark:text-gray-300"
                   >
                     Case Sensitive
                   </Label>
@@ -156,36 +198,16 @@ export function SearchFilters({
                       checked={caseSensitive}
                       onCheckedChange={onCaseSensitiveChange}
                     />
-                    <Label htmlFor="case-sensitive" className="text-xs">
+                    <Label
+                      htmlFor="case-sensitive"
+                      className="text-xs text-gray-600 dark:text-gray-400"
+                    >
                       {caseSensitive ? "Yes" : "No"}
                     </Label>
                   </div>
                 </div>
               )}
             </div>
-
-            {/* Similarity Threshold (Semantic Search) */}
-            {(searchType === "semantic" || searchType === "hybrid") && (
-              <div className="space-y-2">
-                <Label className="text-xs font-medium">
-                  Similarity Threshold: {similarityThreshold.toFixed(2)}
-                </Label>
-                <Slider
-                  value={[similarityThreshold]}
-                  onValueChange={(value) =>
-                    onSimilarityThresholdChange(value[0])
-                  }
-                  max={1}
-                  min={0}
-                  step={0.05}
-                  className="w-full"
-                />
-                <div className="flex justify-between text-xs text-gray-500">
-                  <span>Less relevant</span>
-                  <span>More relevant</span>
-                </div>
-              </div>
-            )}
           </CardContent>
         </Card>
       </CollapsibleContent>
