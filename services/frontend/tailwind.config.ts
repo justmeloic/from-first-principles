@@ -44,12 +44,14 @@ const config = {
       boxShadow: {
         'custom': '-10px 10px 15px 5px rgba(1, 0.1, 0.1, 0.2)',
         'custom-lg': '-15px 15px 20px 7px rgba(1, 0.1, 0.1, 0.3)',
-        'custom-white': '0px 8px 15px 5px rgba(255, 255, 255, 0.1)',
+        'custom-white': '0px 4px 10px 2px rgba(255, 255, 255, 0.12)',
+        'custom-white-input': '0px 0px 16px 3px rgba(255, 255, 255, 0.16), 0px 0px 8px 1px rgba(255, 255, 255, 0.12)',
         'custom-lg-white': '-15px 15px 20px 7px rgba(255, 255, 255, 0.15)',
         'none': 'none'
       },
       colors: {
         'light-mode-white': '#f4f4f4',
+        'dark-mode-gray-secondary-bg': '#18181b', // zinc-900 equivalent
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

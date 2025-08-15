@@ -1,6 +1,5 @@
 "use client";
 
-import { ThemeToggle } from "@/components/Layout/ThemeToggle";
 import { useTheme } from "@/providers/theme-provider";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -65,7 +64,7 @@ export function NavBar() {
         } md:py-0 py-6`}
         onClick={() => setIsMobileMenuOpen(false)}
       >
-        AI Agent
+        Agent
       </Link>
       <Link
         href="/search"
@@ -96,7 +95,7 @@ export function NavBar() {
           } md:py-0 py-6`}
           onClick={() => setIsMobileMenuOpen(false)}
         >
-          Contact us
+          Contact
         </Link>
       )}
       {isHomePage ? (
@@ -163,7 +162,7 @@ export function NavBar() {
         </button>
 
         <div className="w-36 flex justify-end">
-          <ThemeToggle />
+          {/* Theme toggle removed - now handled by SettingsFloatingButton */}
         </div>
       </div>
 

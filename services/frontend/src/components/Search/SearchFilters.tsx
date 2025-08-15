@@ -63,7 +63,7 @@ export function SearchFilters({
   return (
     <Collapsible open={showFilters}>
       <CollapsibleContent>
-        <Card className="shadow-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 rounded-3xl">
+        <Card className="shadow-2xl border-none border-gray-200 dark:border-gray-700 bg-white dark:bg-dark-mode-gray-secondary-bg rounded-3xl">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium text-gray-900 dark:text-white">

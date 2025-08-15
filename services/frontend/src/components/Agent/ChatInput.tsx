@@ -83,7 +83,7 @@ export function ChatInput({ onSend, isLoading }: ChatInputProps) {
           "relative flex flex-col w-full rounded-full md:rounded-3xl border bg-white dark:bg-black dark:border-gray-600 transition-shadow duration-300 ease-in-out",
           "min-h-16 md:min-h-28", // Reduced height on mobile
           isFocused
-            ? "shadow-[0_1px_6px_1px_rgba(32,33,36,0.12),0_1px_8px_2px_rgba(32,33,36,0.12),0_1px_12px_3px_rgba(32,33,36,0.2)] dark:shadow-[0_4px_8px_0_rgba(0,0,0,0.4)]"
+            ? "shadow-[0_1px_6px_1px_rgba(32,33,36,0.12),0_1px_8px_2px_rgba(32,33,36,0.12),0_1px_12px_3px_rgba(32,33,36,0.2)] dark:shadow-custom-white-input"
             : "shadow-none"
         )}
       >
