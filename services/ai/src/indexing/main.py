@@ -8,13 +8,10 @@ Uses typer for a friendly CLI experience with rich output formatting.
 from typing import Optional
 
 import typer
-from rich import print as rprint
-from rich.console import Console
-from rich.progress import Progress, SpinnerColumn, TextColumn
-from rich.table import Table
 
-from .builder import IndexingPipeline
-from .config import IndexingConfig
+from .cli.core import clear_index, index_content, test_pipeline
+from .cli.data import browse_data, inspect_post, sample_data
+from .cli.search import search_content, show_config, show_stats
 
 # Create the main typer app
 app = typer.Typer(
@@ -47,22 +44,9 @@ Quick Start:
     rich_markup_mode='rich',
 )
 
-# Rich console for better output
-console = Console()
-
-
-def get_pipeline() -> IndexingPipeline:
-    """Get a configured indexing pipeline instance."""
-    try:
-        config = IndexingConfig()
-        return IndexingPipeline(config)
-    except Exception as e:
-        rprint(f'[red]❌ Failed to initialize pipeline: {e}[/red]')
-        raise typer.Exit(1)
-
 
 @app.command('test')
-def test_pipeline():
+def test_cmd():
     """
     🧪 Test the indexing pipeline configuration and dependencies.
 
@@ -78,50 +62,11 @@ def test_pipeline():
     Example:
       index-cli test
     """
-    rprint('[blue]🧪 Testing indexing pipeline...[/blue]')
-
-    with Progress(
-        SpinnerColumn(),
-        TextColumn('[progress.description]{task.description}'),
-        console=console,
-    ) as progress:
-        task = progress.add_task('Running pipeline tests...', total=None)
-
-        try:
-            pipeline = get_pipeline()
-            result = pipeline.quick_test()
-
-            progress.update(task, completed=True)
-
-            if result.get('success'):
-                rprint('[green]✅ Pipeline test successful![/green]')
-
-                # Display test results in a nice table
-                table = Table(title='Test Results')
-                table.add_column('Component', style='cyan')
-                table.add_column('Status', style='green')
-                table.add_column('Details')
-
-                for component, status in result.get('components', {}).items():
-                    status_icon = '✅' if status.get('success') else '❌'
-                    details = status.get('details', '')
-                    table.add_row(component.title(), status_icon, details)
-
-                console.print(table)
-            else:
-                rprint('[red]❌ Pipeline test failed![/red]')
-                error = result.get('error', 'Unknown error')
-                rprint(f'[red]Error: {error}[/red]')
-                raise typer.Exit(1)
-
-        except Exception as e:
-            progress.update(task, completed=True)
-            rprint(f'[red]❌ Test failed: {e}[/red]')
-            raise typer.Exit(1)
+    test_pipeline()
 
 
 @app.command('index')
-def index_content(
+def index_cmd(
     category: Optional[str] = typer.Option(
         None, '--category', '-c', help='Index specific category (blog/engineering)'
     ),
@@ -155,94 +100,11 @@ def index_content(
       index-cli index -c blog -s my-post        # Index specific post
       index-cli index --force                   # Force reindex all
     """
-    pipeline = get_pipeline()
-
-    if slug and not category:
-        rprint('[red]❌ When specifying --slug, you must also specify --category[/red]')
-        raise typer.Exit(1)
-
-    with Progress(
-        SpinnerColumn(),
-        TextColumn('[progress.description]{task.description}'),
-        console=console,
-    ) as progress:
-        if slug:
-            # Index single post
-            task = progress.add_task(f'Indexing {category}/{slug}...', total=None)
-            rprint(f'[blue]📄 Indexing post: {category}/{slug}[/blue]')
-
-            try:
-                result = pipeline.index_single_post(category, slug)  # type: ignore
-                progress.update(task, completed=True)
-
-                if result and result.posts_processed > 0:
-                    rprint('[green]✅ Post indexed successfully![/green]')
-                    rprint(f'[dim]Chunks created: {result.chunks_created}[/dim]')
-                    rprint(
-                        f'[dim]Embeddings generated: {result.embeddings_generated}[/dim]'
-                    )
-                else:
-                    rprint('[red]❌ Failed to index post[/red]')
-                    if result and result.errors:
-                        for error in result.errors:
-                            rprint(f'[red]Error: {error}[/red]')
-                    raise typer.Exit(1)
-
-            except Exception as e:
-                progress.update(task, completed=True)
-                rprint(f'[red]❌ Indexing failed: {e}[/red]')
-                raise typer.Exit(1)
-
-        else:
-            # Index all or category
-            if category:
-                task = progress.add_task(f'Indexing {category} posts...', total=None)
-                rprint(f'[blue]📚 Indexing category: {category}[/blue]')
-            else:
-                task = progress.add_task('Indexing all posts...', total=None)
-                rprint('[blue]📚 Indexing all blog posts...[/blue]')
-
-            try:
-                result = pipeline.index_all_content(
-                    category_filter=category, force_reindex=force
-                )
-                progress.update(task, completed=True)
-
-                rprint('[green]✅ Indexing completed![/green]')
-
-                # Display results in a table
-                table = Table(title='Indexing Results')
-                table.add_column('Metric', style='cyan')
-                table.add_column('Count', style='green')
-
-                table.add_row('Posts processed', str(result.posts_processed))
-                table.add_row('Posts updated', str(result.posts_updated))
-                table.add_row('Posts skipped', str(result.posts_skipped))
-                table.add_row('Chunks created', str(result.chunks_created))
-                table.add_row('Embeddings generated', str(result.embeddings_generated))
-
-                console.print(table)
-
-                if result.errors:
-                    rprint(f'[yellow]⚠️  {len(result.errors)} errors occurred:[/yellow]')
-                    for error in result.errors[:3]:  # Show first 3 errors
-                        rprint(f'[yellow]  - {error}[/yellow]')
-                    if len(result.errors) > 3:
-                        rprint(f'[dim]  ... and {len(result.errors) - 3} more[/dim]')
-
-                if result.duration_seconds:
-                    rprint(
-                        f'[dim]Processing time: {result.duration_seconds:.2f} seconds[/dim]'
-                    )
-
-            except Exception as e:
-                progress.update(task, completed=True)
-                rprint(f'[red]❌ Indexing failed: {e}[/red]')
-                raise typer.Exit(1)
+    index_content(category=category, slug=slug, force=force)
 
 
 @app.command('stats')
-def show_stats():
+def stats_cmd():
     """
     📊 Show indexing statistics and database information.
 
@@ -258,66 +120,11 @@ def show_stats():
     Example:
       index-cli stats
     """
-    rprint('[blue]📊 Getting indexing statistics...[/blue]')
-
-    with Progress(
-        SpinnerColumn(),
-        TextColumn('[progress.description]{task.description}'),
-        console=console,
-    ) as progress:
-        task = progress.add_task('Loading statistics...', total=None)
-
-        try:
-            pipeline = get_pipeline()
-            stats = pipeline.get_indexing_stats()
-            progress.update(task, completed=True)
-
-            # Display stats in a nice format
-            table = Table(title='Database Statistics')
-            table.add_column('Category', style='cyan')
-            table.add_column('Posts', style='green')
-            table.add_column('Chunks', style='green')
-            table.add_column('Last Updated', style='dim')
-
-            total_posts = 0
-            total_chunks = 0
-
-            for category, category_stats in stats.get('categories', {}).items():
-                posts = category_stats.get('posts', 0)
-                chunks = category_stats.get('chunks', 0)
-                last_updated = category_stats.get('last_updated', 'Never')
-
-                table.add_row(
-                    category.title(), str(posts), str(chunks), str(last_updated)
-                )
-                total_posts += posts
-                total_chunks += chunks
-
-            table.add_row(
-                '[bold]Total[/bold]',
-                f'[bold]{total_posts}[/bold]',
-                f'[bold]{total_chunks}[/bold]',
-                '',
-            )
-
-            console.print(table)
-
-            # Database info
-            db_info = stats.get('database', {})
-            if db_info:
-                rprint(
-                    f'\n[dim]Database location: {db_info.get("location", "Unknown")}[/dim]'
-                )
-                rprint(f'[dim]Database size: {db_info.get("size", "Unknown")}[/dim]')
-
-        except Exception as e:
-            progress.update(task, completed=True)
-            rprint(f'[red]❌ Failed to get stats: {e}[/red]')
-            raise typer.Exit(1)
+    show_stats()
 
 
 @app.command('clear')
-def clear_index(
+def clear_cmd(
     category: Optional[str] = typer.Option(
         None, '--category', '-c', help='Clear specific category only'
     ),
@@ -341,42 +148,11 @@ def clear_index(
       index-cli clear -c blog            # Clear only blog posts
       index-cli clear --yes              # Clear all without confirmation
     """
-    if category:
-        message = f'clear the [red]{category}[/red] category index'
-    else:
-        message = 'clear the [red]entire[/red] search index'
-
-    if not confirm:
-        confirmed = typer.confirm(f'Are you sure you want to {message}?')
-        if not confirmed:
-            rprint('[yellow]Operation cancelled.[/yellow]')
-            return
-
-    with Progress(
-        SpinnerColumn(),
-        TextColumn('[progress.description]{task.description}'),
-        console=console,
-    ) as progress:
-        task = progress.add_task('Clearing index...', total=None)
-
-        try:
-            pipeline = get_pipeline()
-            pipeline.clear_index(category=category)
-            progress.update(task, completed=True)
-
-            if category:
-                rprint(f'[green]✅ Cleared {category} category index![/green]')
-            else:
-                rprint('[green]✅ Cleared entire index![/green]')
-
-        except Exception as e:
-            progress.update(task, completed=True)
-            rprint(f'[red]❌ Failed to clear index: {e}[/red]')
-            raise typer.Exit(1)
+    clear_index(category=category, confirm=confirm)
 
 
 @app.command('search')
-def search_content(
+def search_cmd(
     query: str = typer.Argument(..., help='Search query'),
     limit: int = typer.Option(5, '--limit', '-l', help='Number of results to show'),
     category: Optional[str] = typer.Option(
@@ -423,59 +199,18 @@ def search_content(
       index-cli search "Python" -m keyword --case-sensitive  # Case sensitive
       index-cli search "concepts" -t 0.3               # Lower threshold
     """
-    search_icon = '🧠' if mode == 'semantic' else '🔍'
-    rprint(f'[blue]{search_icon} {mode.title()} search for: "{query}"[/blue]')
-
-    with Progress(
-        SpinnerColumn(),
-        TextColumn('[progress.description]{task.description}'),
-        console=console,
-    ) as progress:
-        task = progress.add_task('Searching...', total=None)
-
-        try:
-            pipeline = get_pipeline()
-            results = pipeline.search_unified(
-                query=query,
-                mode=mode,
-                limit=limit,
-                category_filter=category,
-                similarity_threshold=threshold,
-                case_sensitive=case_sensitive,
-            )
-            progress.update(task, completed=True)
-
-            if not results:
-                rprint('[yellow]No results found.[/yellow]')
-                return
-
-            rprint(f'[green]Found {len(results)} results:[/green]\n')
-
-            for i, result in enumerate(results, 1):
-                rprint(f'[bold]{i}. {result.get("title", "Untitled")}[/bold]')
-
-                # Show different score info based on search mode
-                if mode == 'keyword':
-                    score_info = f'Score: {result.get("score", 0):.3f} | Matches: {result.get("term_matches", 0)} terms'
-                else:
-                    score_info = f'Similarity: {result.get("score", 0):.3f}'
-
-                rprint(
-                    f'[dim]Category: {result.get("category", "Unknown")} | {score_info}[/dim]'
-                )
-                rprint(f'{result.get("excerpt", "No excerpt available")[:200]}...')
-                rprint(
-                    f'[link]/{result.get("category", "")}/{result.get("slug", "")}[/link]\n'
-                )
-
-        except Exception as e:
-            progress.update(task, completed=True)
-            rprint(f'[red]❌ Search failed: {e}[/red]')
-            raise typer.Exit(1)
+    search_content(
+        query=query,
+        limit=limit,
+        category=category,
+        threshold=threshold,
+        mode=mode,
+        case_sensitive=case_sensitive,
+    )
 
 
 @app.command('browse')
-def browse_data(
+def browse_cmd(
     limit: int = typer.Option(20, '--limit', '-l', help='Number of records to show'),
     category: Optional[str] = typer.Option(
         None, '--category', '-c', help='Filter by category (blog/engineering)'
@@ -511,102 +246,11 @@ def browse_data(
       index-cli browse -p "my-post-slug"            # Specific post
       index-cli browse --columns "title,category,word_count"  # Custom columns
     """
-    rprint('[blue]👀 Browsing indexed data...[/blue]')
-
-    with Progress(
-        SpinnerColumn(),
-        TextColumn('[progress.description]{task.description}'),
-        console=console,
-    ) as progress:
-        task = progress.add_task('Loading data...', total=None)
-
-        try:
-            pipeline = get_pipeline()
-
-            if not pipeline.content_table:
-                rprint('[red]❌ No database table found. Run indexing first.[/red]')
-                raise typer.Exit(1)
-
-            # Build query
-            query = pipeline.content_table.search()
-
-            # Apply filters
-            filters = []
-            if category:
-                filters.append(f"category = '{category}'")
-            if post:
-                filters.append(f"post_slug = '{post}'")
-
-            if filters:
-                query = query.where(' AND '.join(filters))
-
-            # Get data
-            results = query.limit(limit).to_list()
-            progress.update(task, completed=True)
-
-            if not results:
-                rprint('[yellow]No data found with the specified filters.[/yellow]')
-                return
-
-            # Parse columns
-            available_columns = [
-                'title',
-                'category',
-                'post_slug',
-                'content',
-                'chunk_index',
-                'word_count',
-                'created_at',
-                'model_name',
-                'vector_dim',
-            ]
-            requested_columns = [col.strip() for col in columns.split(',')]
-            display_columns = [
-                col for col in requested_columns if col in available_columns
-            ]
-
-            if not display_columns:
-                display_columns = ['title', 'category', 'post_slug', 'content']
-
-            # Create table
-            table = Table(title=f'Indexed Data ({len(results)} records)')
-
-            for col in display_columns:
-                style = 'cyan' if col in ['title', 'category'] else None
-                table.add_column(col.title().replace('_', ' '), style=style)
-
-            # Add rows
-            for result in results:
-                row_data = []
-                for col in display_columns:
-                    value = result.get(col, '')
-
-                    # Truncate long content
-                    if col == 'content' and isinstance(value, str) and len(value) > 100:
-                        value = value[:97] + '...'
-                    elif col == 'created_at' and value:
-                        value = str(value)[:19]  # Remove microseconds
-
-                    row_data.append(str(value))
-
-                table.add_row(*row_data)
-
-            console.print(table)
-
-            # Show summary
-            total_chunks = pipeline.content_table.count_rows()
-            rprint(
-                f'\n[dim]Showing {len(results)} of {total_chunks} total chunks[/dim]'
-            )
-
-        except Exception as e:
-            progress.update(task, completed=True)
-            rprint(f'[red]❌ Failed to browse data: {e}[/red]')
-            raise typer.Exit(1)
+    browse_data(limit=limit, category=category, post=post, columns=columns)
 
 
 @app.command('sample')
-def sample_data(
+def sample_cmd(
     count: int = typer.Option(5, '--count', '-n', help='Number of random samples'),
     category: Optional[str] = typer.Option(
         None, '--category', '-c', help='Sample from specific category'
@@ -632,86 +276,11 @@ def sample_data(
       index-cli sample -c blog            # Random blog samples only
       index-cli sample --vectors          # Include embedding vectors
     """
-    rprint(f'[blue]🎲 Getting {count} random samples...[/blue]')
-
-    with Progress(
-        SpinnerColumn(),
-        TextColumn('[progress.description]{task.description}'),
-        console=console,
-    ) as progress:
-        task = progress.add_task('Sampling data...', total=None)
-
-        try:
-            pipeline = get_pipeline()
-
-            if not pipeline.content_table:
-                rprint('[red]❌ No database table found. Run indexing first.[/red]')
-                raise typer.Exit(1)
-
-            # Get total count for random sampling
-            total_rows = pipeline.content_table.count_rows()
-
-            if total_rows == 0:
-                rprint('[yellow]No data found in database.[/yellow]')
-                return
-
-            # Build query with random sampling
-            query = pipeline.content_table.search()
-
-            if category:
-                query = query.where(f"category = '{category}'")
-
-            # Get more than needed and sample randomly
-            sample_size = min(count * 3, total_rows)
-            results = query.limit(sample_size).to_list()
-
-            # Randomly sample from results
-            import random
-
-            random.shuffle(results)
-            samples = results[:count]
-
-            progress.update(task, completed=True)
-
-            if not samples:
-                rprint('[yellow]No samples found with the specified filters.[/yellow]')
-                return
-
-            rprint(f'[green]Found {len(samples)} random samples:[/green]\n')
-
-            for i, sample in enumerate(samples, 1):
-                rprint(f'[bold cyan]Sample {i}:[/bold cyan]')
-                rprint(f'[bold]Title:[/bold] {sample.get("title", "N/A")}')
-                rprint(f'[bold]Category:[/bold] {sample.get("category", "N/A")}')
-                rprint(f'[bold]Post:[/bold] {sample.get("post_slug", "N/A")}')
-                rprint(f'[bold]Chunk:[/bold] {sample.get("chunk_index", "N/A")}')
-                rprint(f'[bold]Words:[/bold] {sample.get("word_count", "N/A")}')
-
-                content = sample.get('content', '')
-                if len(content) > 200:
-                    content = content[:197] + '...'
-                rprint(f'[bold]Content:[/bold] {content}')
-
-                if show_vectors:
-                    vector = sample.get('vector', [])
-                    if vector:
-                        vector_preview = (
-                            vector[:5] + ['...'] if len(vector) > 5 else vector
-                        )
-                        rprint(
-                            f'[bold]Vector:[/bold] {vector_preview} [dim](dim: {len(vector)})[/dim]'
-                        )
-
-                rprint('')  # Empty line between samples
-
-        except Exception as e:
-            progress.update(task, completed=True)
-            rprint(f'[red]❌ Failed to sample data: {e}[/red]')
-            raise typer.Exit(1)
+    sample_data(count=count, category=category, show_vectors=show_vectors)
 
 
 @app.command('inspect')
-def inspect_post(
+def inspect_cmd(
     slug: str = typer.Argument(..., help='Post slug to inspect'),
     category: Optional[str] = typer.Option(
         None, '--category', '-c', help='Post category (auto-detected if not provided)'
@@ -740,137 +309,16 @@ def inspect_post(
       index-cli inspect "my-post" --vectors               # Include vectors
       index-cli inspect "my-post" --similarities          # Show chunk similarities
     """
-    rprint(f'[blue]🔍 Inspecting post: {slug}[/blue]')
-
-    with Progress(
-        SpinnerColumn(),
-        TextColumn('[progress.description]{task.description}'),
-        console=console,
-    ) as progress:
-        task = progress.add_task('Loading post data...', total=None)
-
-        try:
-            pipeline = get_pipeline()
-
-            if not pipeline.content_table:
-                rprint('[red]❌ No database table found. Run indexing first.[/red]')
-                raise typer.Exit(1)
-
-            # Build query
-            query = pipeline.content_table.search()
-
-            if category:
-                query = query.where(f"post_slug = '{slug}' AND category = '{category}'")
-            else:
-                query = query.where(f"post_slug = '{slug}'")
-
-            chunks = query.to_list()
-            progress.update(task, completed=True)
-
-            if not chunks:
-                rprint(f'[yellow]No data found for post: {slug}[/yellow]')
-                if not category:
-                    rprint('[dim]Try specifying --category if you know it[/dim]')
-                return
-
-            # Sort chunks by index
-            chunks.sort(key=lambda x: x.get('chunk_index', 0))
-
-            # Post summary
-            first_chunk = chunks[0]
-            rprint(f'[green]Found {len(chunks)} chunks for post: {slug}[/green]\n')
-
-            # Summary table
-            summary_table = Table(title='Post Summary')
-            summary_table.add_column('Property', style='cyan')
-            summary_table.add_column('Value', style='green')
-
-            summary_table.add_row('Title', first_chunk.get('title', 'N/A'))
-            summary_table.add_row('Category', first_chunk.get('category', 'N/A'))
-            summary_table.add_row('Total Chunks', str(len(chunks)))
-            summary_table.add_row(
-                'Total Words', str(sum(c.get('word_count', 0) for c in chunks))
-            )
-            summary_table.add_row('Model Used', first_chunk.get('model_name', 'N/A'))
-            summary_table.add_row(
-                'Vector Dimension', str(first_chunk.get('vector_dim', 'N/A'))
-            )
-
-            console.print(summary_table)
-            rprint('')
-
-            # Chunks details
-            for i, chunk in enumerate(chunks):
-                rprint(
-                    f'[bold cyan]Chunk {i + 1} (Index: {chunk.get("chunk_index", "N/A")}):[/bold cyan]'
-                )
-                rprint(f'[bold]Words:[/bold] {chunk.get("word_count", "N/A")}')
-                rprint(f'[bold]Characters:[/bold] {len(chunk.get("content", ""))}')
-
-                if chunk.get('section_title'):
-                    rprint(f'[bold]Section:[/bold] {chunk.get("section_title")}')
-
-                content = chunk.get('content', '')
-                if len(content) > 300:
-                    content = content[:297] + '...'
-                rprint(f'[bold]Content:[/bold] {content}')
-
-                if show_vectors:
-                    vector = chunk.get('vector', [])
-                    if vector:
-                        vector_preview = (
-                            vector[:10] + ['...'] if len(vector) > 10 else vector
-                        )
-                        rprint(f'[bold]Vector:[/bold] {vector_preview}')
-
-                rprint('')
-
-            # Calculate similarities if requested
-            if show_similarities and len(chunks) > 1:
-                rprint('[blue]📊 Chunk Similarities:[/blue]')
-
-                import numpy as np
-
-                vectors = []
-                for chunk in chunks:
-                    vector = chunk.get('vector', [])
-                    if vector:
-                        vectors.append(vector)
-
-                if len(vectors) > 1:
-                    similarities_table = Table(title='Chunk Similarity Matrix')
-                    similarities_table.add_column('Chunk', style='cyan')
-
-                    for i in range(len(vectors)):
-                        similarities_table.add_column(f'C{i + 1}', style='green')
-
-                    for i, vec1 in enumerate(vectors):
-                        row = [f'Chunk {i + 1}']
-                        for j, vec2 in enumerate(vectors):
-                            if i == j:
-                                sim = 1.0
-                            else:
-                                # Calculate cosine similarity
-                                sim = np.dot(vec1, vec2) / (
-                                    np.linalg.norm(vec1) * np.linalg.norm(vec2)
-                                )
-                            row.append(f'{sim:.3f}')
-                        similarities_table.add_row(*row)
-
-                    console.print(similarities_table)
-                else:
-                    rprint(
-                        '[yellow]Not enough vectors for similarity calculation[/yellow]'
-                    )
-
-        except Exception as e:
-            progress.update(task, completed=True)
-            rprint(f'[red]❌ Failed to inspect post: {e}[/red]')
-            raise typer.Exit(1)
+    inspect_post(
+        slug=slug,
+        category=category,
+        show_vectors=show_vectors,
+        show_similarities=show_similarities,
+    )
 
 
 @app.command('config')
-def show_config():
+def config_cmd():
     """
     ⚙️  Show current configuration.
 
@@ -886,35 +334,7 @@ def show_config():
     Example:
       index-cli config
     """
-    try:
-        config = IndexingConfig()
-
-        table = Table(title='Indexing Configuration')
-        table.add_column('Setting', style='cyan')
-        table.add_column('Value', style='green')
-
-        table.add_row('Content Directory', str(config.content.content_root))
-        table.add_row('Database Path', str(config.database.db_path))
-        table.add_row('Embedding Model', config.embedding.model_name)
-        table.add_row('Chunk Size', str(config.chunking.chunk_size))
-        table.add_row('Chunk Overlap', str(config.chunking.chunk_overlap))
-        table.add_row('Batch Size', str(config.embedding.batch_size))
-        table.add_row('Device', config.embedding.device)
-
-        console.print(table)
-
-        # Model info
-        try:
-            pipeline = get_pipeline()
-            model_info = pipeline.embedder.get_model_info()
-            embedding_dim = model_info.get('embedding_dimension', 'Unknown')
-            rprint(f'\n[dim]Model Status: Loaded ({embedding_dim} dimensions)[/dim]')
-        except Exception:
-            rprint('\n[dim]Model Status: Not loaded[/dim]')
-
-    except Exception as e:
-        rprint(f'[red]❌ Failed to load config: {e}[/red]')
-        raise typer.Exit(1)
+    show_config()
 
 
 if __name__ == '__main__':
