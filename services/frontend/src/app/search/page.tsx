@@ -22,22 +22,15 @@ import { SearchResults } from "@/components/Search/SearchResults";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/toaster";
 import { useToast } from "@/hooks/use-toast";
-import { getSearchStats, searchContent } from "@/lib/api";
+import { searchContent } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import {
-  SearchQuery,
-  SearchResponse,
-  SearchResult,
-  SearchStats,
-} from "@/types";
+import { SearchQuery, SearchResponse, SearchResult } from "@/types";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 export default function SearchPage() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [searchStats, setSearchStats] = useState<SearchStats | null>(null);
-  const [isStatsLoading, setIsStatsLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
 
@@ -125,27 +118,6 @@ export default function SearchPage() {
       }
     };
   }, []);
-
-  // Load search stats on component mount
-  useEffect(() => {
-    const loadStats = async () => {
-      try {
-        const stats = await getSearchStats();
-        setSearchStats(stats);
-      } catch (error) {
-        console.error("Failed to load search stats:", error);
-        toast({
-          title: "Warning",
-          description: "Failed to load search statistics",
-          variant: "destructive",
-        });
-      } finally {
-        setIsStatsLoading(false);
-      }
-    };
-
-    loadStats();
-  }, [toast]);
 
   // Save search state to localStorage
   useEffect(() => {
@@ -362,12 +334,6 @@ export default function SearchPage() {
               )}
             >
               <div className="w-full space-y-6">
-                {/* Search Stats
-                <SearchStatsDisplay
-                  stats={searchStats}
-                  isLoading={isStatsLoading}
-                />*/}
-
                 {/* Search Bar */}
                 <SearchBar
                   query={query}
