@@ -18,7 +18,7 @@
 
 import { cn } from "@/lib/utils";
 import { Loader2, Search as SearchIcon, Settings2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface SearchBarProps {
   query: string;
@@ -42,11 +42,34 @@ export function SearchBar({
   hasResults = false, // Default to false
 }: SearchBarProps) {
   const [isFocused, setIsFocused] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-resize textarea based on content
+  useEffect(() => {
+    if (textareaRef.current) {
+      const textarea = textareaRef.current;
+      // Reset height to calculate the new height
+      textarea.style.height = "auto";
+      // Calculate the new height based on scroll height
+      const newHeight = Math.min(textarea.scrollHeight, 200); // Max height of 200px (about 7-8 lines)
+      textarea.style.height = `${newHeight}px`;
+
+      // Check if the textarea has expanded beyond minimum height
+      const minHeight = 48; // Match the min-h-[48px] from className
+      setIsExpanded(newHeight > minHeight + 16); // Add some padding buffer
+    }
+  }, [query]);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !isLoading) {
+    if (e.key === "Enter" && !e.shiftKey && !isLoading) {
+      e.preventDefault(); // Prevent new line on Enter without Shift
       onSearch();
     }
+  };
+
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    onQueryChange(e.target.value);
   };
 
   return (
@@ -62,35 +85,50 @@ export function SearchBar({
       {/* Chat-like interface for all screen sizes */}
       <div
         className={cn(
-          "relative flex w-full rounded-full border bg-white dark:bg-black dark:border-gray-600 transition-shadow duration-300 ease-in-out",
-          "min-h-16",
+          "relative flex w-full border bg-white dark:bg-black dark:border-gray-600 transition-all duration-500 ease-out",
+          "min-h-16", // Minimum height remains the same
+          isExpanded ? "rounded-3xl" : "rounded-full", // Less round when expanded
           isFocused
             ? "shadow-[0_1px_6px_1px_rgba(32,33,36,0.12),0_1px_8px_2px_rgba(32,33,36,0.12),0_1px_12px_3px_rgba(32,33,36,0.2)] dark:shadow-custom-white-input"
             : "shadow-none"
         )}
+        style={{
+          transition:
+            "border-radius 0.4s cubic-bezier(0.4, 0, 0.2, 1), height 0.3s ease-out, box-shadow 0.3s ease-in-out",
+        }}
       >
-        {/* Search icon */}
+        {/* Search icon - always centered vertically */}
         <div className="flex items-center pl-4">
           <SearchIcon className="h-5 w-5 text-gray-400" />
         </div>
 
-        {/* Input */}
-        <input
-          type="text"
+        {/* Input - replaced with textarea for auto-expanding */}
+        <textarea
+          ref={textareaRef}
           placeholder="Search through our knowledge base..."
           value={query}
-          onChange={(e) => onQueryChange(e.target.value)}
-          onKeyPress={handleKeyPress}
+          onChange={handleTextareaChange}
+          onKeyDown={handleKeyPress}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          className="flex-1 bg-transparent px-3 py-4 text-base dark:text-gray-200 outline-none placeholder:text-muted-foreground dark:placeholder:text-gray-500"
+          className={cn(
+            "flex-1 bg-transparent px-3 text-base dark:text-gray-200 outline-none placeholder:text-muted-foreground dark:placeholder:text-gray-500 resize-none overflow-y-auto",
+            "min-h-[64px]", // Match the container height
+            "leading-6" // Line height for better text spacing
+          )}
           disabled={isLoading}
+          rows={1}
+          style={{
+            paddingTop: query ? "20px" : "20px",
+            paddingBottom: query ? "20px" : "20px",
+            lineHeight: "24px",
+          }}
         />
 
-        {/* Filter button - slides left when search button appears */}
+        {/* Filter button - slides left when search button appears, always centered */}
         <div
           className={cn(
-            "transition-all duration-300 ease-in-out flex items-end pb-3",
+            "transition-all duration-300 ease-in-out flex items-center",
             query.trim() && !isLoading
               ? "transform -translate-x-12" // Slide left when search button appears
               : "transform translate-x-0"
@@ -109,7 +147,7 @@ export function SearchBar({
           </button>
         </div>
 
-        {/* Send/Search button - positioned like in chat */}
+        {/* Send/Search button - positioned like in chat, always centered */}
         <div
           className={cn(
             "absolute right-3 top-1/2 -translate-y-1/2 transition-all duration-500 ease-in-out",
