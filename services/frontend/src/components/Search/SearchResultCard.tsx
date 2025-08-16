@@ -90,7 +90,7 @@ export function SearchResultCard({ result }: SearchResultCardProps) {
                   Relevance: {(result.score * 100).toFixed(0)}%
                 </span>
               </div>
-              <div className="w-12 h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div className="mr-1 w-20 h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-accent transition-all duration-300"
                   style={{ width: `${result.score * 100}%` }}

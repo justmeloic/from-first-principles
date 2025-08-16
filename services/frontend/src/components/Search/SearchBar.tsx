@@ -85,7 +85,7 @@ export function SearchBar({
       {/* Chat-like interface for all screen sizes */}
       <div
         className={cn(
-          "relative flex w-full border bg-white dark:bg-black dark:border-gray-600 transition-all duration-500 ease-out",
+          "relative flex w-full border bg-white dark:bg-black dark:border-zinc-800 transition-all duration-500 ease-out",
           "min-h-16", // Minimum height remains the same
           isExpanded ? "rounded-3xl" : "rounded-full", // Less round when expanded
           isFocused
