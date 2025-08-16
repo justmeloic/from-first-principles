@@ -10,7 +10,7 @@ dependencies = [
     "pytest>=7.4.0",
     "pytest-asyncio>=0.21.0",
     "pytest-cov>=4.1.0",
-    "httpx>=0.24.1", # Required for FastAPI TestClient
+    "httpx>=0.24.1",                # Required for FastAPI TestClient
     "uvicorn[standard]>=0.27.0",
     "python-dotenv>=1.0.0",
     "pydantic>=2.0.0",
@@ -28,13 +28,26 @@ dependencies = [
     "langchain-text-splitters>=0.0.1",
     "psutil>=5.9.0",
     "torch>=2.0.0",
-    "typer[all]>=0.9.0", # Modern CLI framework
-    "rich>=13.0.0", # Beautiful terminal output
+    "typer[all]>=0.9.0",               # Modern CLI framework
+    "rich>=13.0.0",                    # Beautiful terminal output
     "litellm>=1.75.6",
+]
+
+[project.optional-dependencies]
+analytics = [
+    "streamlit>=1.28.0",
+    "pandas>=2.0.0",
+    "numpy>=1.24.0",
+    "plotly>=5.15.0",
+    "scikit-learn>=1.3.0",
+    "seaborn>=0.12.0",
+    "altair>=5.0.0",
+    "matplotlib>=3.7.0",
 ]
 
 [project.scripts]
 index-cli = "src.indexing.main:app"
+analytics = "src.analytics.main:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
