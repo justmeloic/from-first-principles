@@ -1,0 +1,16 @@
+# Analytics Dashboard Requirements
+# Additional packages needed for the analytics dashboard
+
+# Core analytics and visualization
+streamlit>=1.28.0
+pandas>=2.0.0
+numpy>=1.24.0
+plotly>=5.15.0
+
+# Data processing and utilities
+scikit-learn>=1.3.0  # For additional analysis features
+seaborn>=0.12.0      # Additional statistical visualizations
+
+# Optional: for enhanced features
+altair>=5.0.0        # Alternative visualization library
+matplotlib>=3.7.0    # For additional plotting options
