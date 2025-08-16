@@ -19,6 +19,8 @@
 import { SearchBar } from "@/components/Search/SearchBar";
 import { SearchFilters } from "@/components/Search/SearchFilters";
 import { SearchResults } from "@/components/Search/SearchResults";
+import { Button } from "@/components/ui/button";
+import { Toaster } from "@/components/ui/toaster";
 import { useToast } from "@/hooks/use-toast";
 import { getSearchStats, searchContent } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -37,6 +39,7 @@ export default function SearchPage() {
   const [searchStats, setSearchStats] = useState<SearchStats | null>(null);
   const [isStatsLoading, setIsStatsLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
 
   // Search parameters
   const [searchType, setSearchType] = useState<
@@ -55,6 +58,73 @@ export default function SearchPage() {
 
   const abortController = useRef<AbortController | null>(null);
   const { toast } = useToast();
+
+  // Persist and restore search state
+  useEffect(() => {
+    const storedQuery = localStorage.getItem("searchQuery");
+    const storedResults = localStorage.getItem("searchResults");
+    const storedTotalResults = localStorage.getItem("searchTotalResults");
+    const storedSearchTime = localStorage.getItem("searchTime");
+    const storedSearchType = localStorage.getItem("searchType");
+    const storedLimit = localStorage.getItem("searchLimit");
+    const storedCategoryFilter = localStorage.getItem("searchCategoryFilter");
+    const storedSimilarityThreshold = localStorage.getItem(
+      "searchSimilarityThreshold"
+    );
+    const storedCaseSensitive = localStorage.getItem("searchCaseSensitive");
+    const storedShowFilters = localStorage.getItem("searchShowFilters");
+
+    if (storedQuery) {
+      setQuery(storedQuery);
+    }
+
+    if (storedResults) {
+      try {
+        const parsedResults = JSON.parse(storedResults);
+        setResults(parsedResults);
+      } catch (error) {
+        console.error("Error parsing stored search results:", error);
+      }
+    }
+
+    if (storedTotalResults) {
+      setTotalResults(parseInt(storedTotalResults, 10) || 0);
+    }
+
+    if (storedSearchTime) {
+      setSearchTime(parseFloat(storedSearchTime) || 0);
+    }
+
+    if (storedSearchType) {
+      setSearchType(storedSearchType as "semantic" | "keyword" | "hybrid");
+    }
+
+    if (storedLimit) {
+      setLimit(parseInt(storedLimit, 10) || 10);
+    }
+
+    if (storedCategoryFilter && storedCategoryFilter !== "undefined") {
+      setCategoryFilter(storedCategoryFilter as "blog" | "engineering");
+    }
+
+    if (storedSimilarityThreshold) {
+      setSimilarityThreshold(parseFloat(storedSimilarityThreshold) || 0.5);
+    }
+
+    if (storedCaseSensitive) {
+      setCaseSensitive(storedCaseSensitive === "true");
+    }
+
+    if (storedShowFilters) {
+      setShowFilters(storedShowFilters === "true");
+    }
+
+    return () => {
+      if (abortController.current) {
+        abortController.current.abort();
+      }
+    };
+  }, []);
 
   // Load search stats on component mount
   useEffect(() => {
@@ -76,6 +146,54 @@ export default function SearchPage() {
 
     loadStats();
   }, [toast]);
+
+  // Save search state to localStorage
+  useEffect(() => {
+    localStorage.setItem("searchQuery", query);
+  }, [query]);
+
+  useEffect(() => {
+    if (results.length > 0) {
+      localStorage.setItem("searchResults", JSON.stringify(results));
+    } else {
+      localStorage.removeItem("searchResults");
+    }
+  }, [results]);
+
+  useEffect(() => {
+    localStorage.setItem("searchTotalResults", totalResults.toString());
+  }, [totalResults]);
+
+  useEffect(() => {
+    localStorage.setItem("searchTime", searchTime.toString());
+  }, [searchTime]);
+
+  useEffect(() => {
+    localStorage.setItem("searchType", searchType);
+  }, [searchType]);
+
+  useEffect(() => {
+    localStorage.setItem("searchLimit", limit.toString());
+  }, [limit]);
+
+  useEffect(() => {
+    localStorage.setItem("searchCategoryFilter", categoryFilter || "undefined");
+  }, [categoryFilter]);
+
+  useEffect(() => {
+    localStorage.setItem(
+      "searchSimilarityThreshold",
+      similarityThreshold.toString()
+    );
+  }, [similarityThreshold]);
+
+  useEffect(() => {
+    localStorage.setItem("searchCaseSensitive", caseSensitive.toString());
+  }, [caseSensitive]);
+
+  useEffect(() => {
+    localStorage.setItem("searchShowFilters", showFilters.toString());
+  }, [showFilters]);
 
   const handleSearch = useCallback(async () => {
     if (!query.trim()) {
@@ -148,10 +266,29 @@ export default function SearchPage() {
   ]);
 
   const clearSearch = () => {
+    setIsClearing(true);
     setQuery("");
     setResults([]);
     setTotalResults(0);
     setSearchTime(0);
+    setShowFilters(false);
+    // Clear localStorage when manually clearing search
+    localStorage.removeItem("searchQuery");
+    localStorage.removeItem("searchResults");
+    localStorage.removeItem("searchTotalResults");
+    localStorage.removeItem("searchTime");
+    localStorage.setItem("searchShowFilters", "false");
+
+    // Stop spinning after a short delay
+    setTimeout(() => {
+      setIsClearing(false);
+      toast({
+        title: "Search Cleared",
+        description: "Search results and query have been cleared.",
+        duration: 1500,
+        className: "rounded-xl",
+      });
+    }, 600);
   };
 
   const resetFilters = () => {
@@ -160,6 +297,12 @@ export default function SearchPage() {
     setCategoryFilter(undefined);
     setSimilarityThreshold(0.5);
     setCaseSensitive(false);
+    // Update filter-related localStorage when resetting
+    localStorage.setItem("searchType", "semantic");
+    localStorage.setItem("searchLimit", "10");
+    localStorage.setItem("searchCategoryFilter", "undefined");
+    localStorage.setItem("searchSimilarityThreshold", "0.5");
+    localStorage.setItem("searchCaseSensitive", "false");
   };
 
   const toggleFilters = () => {
@@ -168,6 +311,36 @@ export default function SearchPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black">
+      {/* Clear Search Button - fixed position in top left corner */}
+      {(results.length > 0 || query.trim()) && (
+        <div className="fixed top-24 left-4 z-10">
+          <Button
+            onClick={clearSearch}
+            size="sm"
+            className="rounded-full w-10 h-10 p-0 bg-white dark:bg-dark-mode-gray-secondary-bg text-accent dark:text-white/30 hover:text-white dark:hover:text-white hover:bg-accent dark:hover:bg-accent/50 flex items-center justify-center shadow-md hover:shadow-lg transition-all duration-200 border-0"
+            title="Reset Search"
+            disabled={isClearing}
+          >
+            <svg
+              className={`w-5 h-5 transition-transform duration-600 ease-in-out ${
+                isClearing ? "animate-spin" : ""
+              }`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+              />
+            </svg>
+          </Button>
+        </div>
+      )}
+
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           {/* Dynamic layout based on whether we have results */}
@@ -244,6 +417,7 @@ export default function SearchPage() {
           </div>
         </div>
       </div>
+      <Toaster />
     </div>
   );
 }

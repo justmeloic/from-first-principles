@@ -22,7 +22,11 @@ export function ChatInput({ onSend, isLoading }: ChatInputProps) {
     const textarea = textareaRef.current;
     if (textarea) {
       textarea.style.height = "auto";
-      textarea.style.height = `${Math.max(48, textarea.scrollHeight)}px`;
+      // Set maximum height to 150px (about 6-7 lines) before scrolling
+      textarea.style.height = `${Math.min(
+        Math.max(48, textarea.scrollHeight),
+        150
+      )}px`;
     }
   }, [message]);
 
@@ -80,7 +84,7 @@ export function ChatInput({ onSend, isLoading }: ChatInputProps) {
     >
       <div
         className={cn(
-          "relative flex flex-col w-full rounded-full md:rounded-3xl border bg-white dark:bg-black dark:border-gray-600 transition-shadow duration-300 ease-in-out",
+          "relative flex flex-col w-full rounded-full md:rounded-3xl border bg-white dark:bg-black dark:border-zinc-800 transition-shadow duration-300 ease-in-out",
           "min-h-16 md:min-h-28", // Reduced height on mobile
           isFocused
             ? "shadow-[0_1px_6px_1px_rgba(32,33,36,0.12),0_1px_8px_2px_rgba(32,33,36,0.12),0_1px_12px_3px_rgba(32,33,36,0.2)] dark:shadow-custom-white-input"
@@ -96,7 +100,7 @@ export function ChatInput({ onSend, isLoading }: ChatInputProps) {
           onKeyDown={handleKeyDown}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          className="min-h-8 md:min-h-12 w-full rounded-t-3xl bg-transparent px-4 pt-4 pb-2 md:py-3 text-base md:text-sm dark:text-gray-200 outline-none placeholder:text-muted-foreground dark:placeholder:text-gray-500 resize-none overflow-hidden"
+          className="min-h-8 md:min-h-12 w-full rounded-t-3xl bg-transparent px-4 pt-4 pb-2 md:py-3 text-base md:text-sm dark:text-gray-200 outline-none placeholder:text-muted-foreground dark:placeholder:text-gray-500 resize-none overflow-y-auto max-h-[150px]"
           rows={1}
           disabled={isLoading}
         />

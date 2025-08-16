@@ -292,9 +292,8 @@ export default function AgentPage() {
         <div className="flex items-center justify-between p-4  border-gray-200 dark:border-gray-700">
           <Button
             onClick={clearChat}
-            variant="outline"
             size="sm"
-            className="rounded-full text-gray-400 dark:text-gray-300 hover:text-white dark:hover:text-white flex items-center gap-2"
+            className="rounded-full bg-white dark:bg-dark-mode-gray-secondary-bg text-gray-600 dark:text-gray-300/50 hover:text-white dark:hover:text-white hover:bg-accent dark:hover:bg-accent flex items-center gap-2 shadow-md hover:shadow-lg transition-all duration-200 border-0"
           >
             <svg
               className="w-6 h-6"
