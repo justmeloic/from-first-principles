@@ -12,9 +12,9 @@ AI backend service for the From First Principles platform, providing intelligent
 
 This service provides a comprehensive AI platform with two main components:
 
-### 🤖 Chat API Service
+### 🤖 Agent Service
 
-A FastAPI-based backend that powers intelligent chat functionality with:
+A FastAPI-based backend that hosts an agent with the following functionalities:
 
 - **Multi-Model Support**: Choose between Google Gemini models or local Ollama models
 - **Session Management**: Persistent conversation history across multiple interactions
