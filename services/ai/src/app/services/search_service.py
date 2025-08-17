@@ -20,6 +20,7 @@ search capabilities over blog content.
 
 from __future__ import annotations
 
+import time
 from typing import Dict, Optional
 
 from fastapi import HTTPException
@@ -70,6 +71,7 @@ class SearchService:
         Raises:
             HTTPException: If search fails.
         """
+
         try:
             self._logger.info(
                 f"Searching content with query: '{search_query.query}' "
@@ -77,6 +79,9 @@ class SearchService:
             )
 
             pipeline = self._get_pipeline()
+
+            # Start timing the search
+            start_time = time.time()
 
             # Perform the search using the unified search interface
             results = pipeline.search_unified(
@@ -88,8 +93,12 @@ class SearchService:
                 case_sensitive=search_query.case_sensitive,
             )
 
+            # Calculate search time in milliseconds
+            search_time_ms = (time.time() - start_time) * 1000
+
             self._logger.info(
-                f"Found {len(results)} results for query: '{search_query.query}'"
+                f"Found {len(results)} results for query: '{search_query.query}' "
+                f'in {search_time_ms:.1f}ms'
             )
 
             # Convert results to our response format
@@ -117,7 +126,7 @@ class SearchService:
                 query=search_query.dict(),
                 results=formatted_results,
                 total_results=len(formatted_results),
-                search_time_ms=0,  # Could add timing if needed
+                search_time_ms=search_time_ms,
                 metadata={
                     'search_type': search_query.search_type,
                     'threshold_applied': search_query.similarity_threshold,
