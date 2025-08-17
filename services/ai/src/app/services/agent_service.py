@@ -20,10 +20,9 @@ processes events, and formats the final response.
 
 from __future__ import annotations
 
-import logging
 import time
 import uuid
-from typing import Dict, Tuple
+from typing import Dict, List, Tuple
 
 from fastapi import HTTPException, Request
 from google.adk.events import Event, EventActions
@@ -45,6 +44,68 @@ class AgentService:
     def __init__(self):
         """Initialize the agent service."""
         self._logger = _logger
+
+    async def _process_uploaded_files(
+        self,
+        request: Request,
+        session: Session,
+        file_artifacts: List[str],
+    ) -> str:
+        """Process uploaded files and return formatted content for agent context."""
+        from src.app.artifacts.file_processors import get_file_processor
+
+        if not file_artifacts:
+            return ''
+
+        # Get artifact service from request
+        artifact_service = request.app.state.artifact_service
+
+        # Check if artifact service is configured (ADK best practice)
+        if artifact_service is None:
+            self._logger.error('Artifact service is not configured')
+            return (
+                'Error: File processing unavailable - artifact service not configured'
+            )
+
+        results = []
+        for artifact_filename in file_artifacts:
+            try:
+                # Load artifact using artifact service directly
+                artifact = await artifact_service.load_artifact(
+                    app_name='agent_app',  # Match the config
+                    user_id='default_user',  # Match the config
+                    session_id=session.id,
+                    filename=artifact_filename,
+                )
+
+                # Check return value as recommended in ADK best practices
+                if artifact and artifact.inline_data:
+                    # Get appropriate processor for the MIME type
+                    processor = get_file_processor(artifact.inline_data.mime_type)
+                    processed_content = await processor.process(
+                        artifact.inline_data.data
+                    )
+                    results.append(f'File: {artifact_filename}\n{processed_content}')
+                else:
+                    # Artifact not found or has no content
+                    results.append(
+                        f'File: {artifact_filename} - Could not load content'
+                    )
+
+            except ValueError as e:
+                # Handle ADK-specific errors (e.g., service not configured)
+                self._logger.error(
+                    f'ADK error processing file {artifact_filename}: {e}'
+                )
+                results.append(f'File: {artifact_filename} - Service error: {e}')
+            except Exception as e:
+                # Handle other unexpected errors
+                self._logger.error(
+                    f'Unexpected error processing file {artifact_filename}: {e}'
+                )
+                results.append(f'File: {artifact_filename} - Error processing: {e}')
+
+        return '\n\n'.join(results)
 
     async def _create_and_log_user_event(
         self,
@@ -195,8 +256,23 @@ class AgentService:
                 query.text[:100],
             )
 
+            # Process uploaded files if present
+            file_context = ''
+            if query.file_artifacts:
+                file_context = await self._process_uploaded_files(
+                    request, session, query.file_artifacts
+                )
+
+                # Enhance the user's message with file content
+                enhanced_query_text = (
+                    f'{query.text}\n\n'
+                    f'[Files uploaded with this message:]\n{file_context}'
+                )
+            else:
+                enhanced_query_text = query.text
+
             user_content = await self._create_and_log_user_event(
-                session_service, session, query.text, model_name
+                session_service, session, enhanced_query_text, model_name
             )
 
             final_response_text, references_json = await self._process_agent_events(
