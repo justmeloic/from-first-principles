@@ -12,12 +12,13 @@ AI backend service for the From First Principles platform, providing intelligent
 
 This service provides a comprehensive AI platform with two main components:
 
-### 🤖 Agent Service
+### Agent Service
 
 A FastAPI-based backend that hosts an agent with the following functionalities:
 
 - **Multi-Model Support**: Choose between Google Gemini models or local Ollama models
 - **Session Management**: Persistent conversation history across multiple interactions
+- **File Upload & Artifact Service**: Support for file attachments with automatic processing and integration
 - **CORS Configuration**: Secure cross-origin requests from the frontend
 - **Static File Serving**: Integrated frontend serving capabilities
 - **Production Ready**: Deployment scripts and production configurations
@@ -46,12 +47,20 @@ graph TD
     A --> K[Content Search]
 
     B --> C[Google ADK Session Management]
+    B --> AF[Artifact Service]
     B --> D{Model Provider}
     C --> E[In-Memory Session Store]
+    AF --> AS[File Storage & Processing]
     D --> F[Gemini Models]
     D --> G[Ollama Models]
     F --> H[Vertex AI / Google AI Studio]
     G --> I[Local Ollama Server]
+
+    A --> FU[File Uploads]
+    FU --> AF
+    AS --> AG[Agent Context]
+    AG --> F
+    AG --> G
 
     K --> L[Indexing Pipeline]
     L --> M[Content Loader]
@@ -67,11 +76,14 @@ graph TD
     style A fill:#e3f2fd
     style B fill:#f3e5f5
     style C fill:#e8f5e8
+    style AF fill:#fff9c4
     style D fill:#fff9c4
     style F fill:#fff3e0
     style G fill:#e8f5e8
     style L fill:#fce4ec
     style P fill:#e8f5e8
+    style FU fill:#e1f5fe
+    style AS fill:#f3e5f5
 ```
 
 ## Development Setup
@@ -91,6 +103,9 @@ services/ai/
 │   ├── app/                 # FastAPI chat service
 │   │   ├── api/            # API endpoints
 │   │   ├── core/           # Core functionality
+│   │   ├── artifacts/      # File validation & processing
+│   │   ├── models.py       # Data models
+│   │   ├── schemas.py      # API schemas
 │   │   └── main.py         # FastAPI application
 │   ├── agents/             # AI model agents
 │   └── indexing/           # Content indexing pipeline
@@ -391,9 +406,375 @@ cd ../frontend
 ./scripts/switch-api-config.sh local   # Switch to local
 ```
 
-## API Endpoints
+## File Upload & Artifact Service
+
+The AI service includes a comprehensive file upload and artifact management system that allows users to attach files to their conversations. These files are automatically processed, stored as artifacts, and made available to the AI agent for analysis and interaction.
+
+### Features
+
+- **Multi-File Upload**: Support for uploading multiple files simultaneously
+- **Automatic File Processing**: Files are automatically validated, processed, and stored as artifacts
+- **MIME Type Detection**: Intelligent detection of file types based on content and filename
+- **Session Integration**: Files are associated with user sessions for context preservation
+- **Agent Access**: Uploaded files are immediately available to AI agents for processing
+- **Unique Naming**: Automatic filename generation to prevent conflicts
+- **File Validation**: Built-in validation to ensure file safety and compatibility
+
+### Supported File Types
+
+The artifact service supports a wide range of file types:
+
+#### Text Files
+
+- **Markdown**: `.md`, `.markdown`
+- **Plain Text**: `.txt`
+- **Code Files**: `.py`, `.js`, `.ts`, `.jsx`, `.tsx`, `.html`, `.css`, `.json`, `.yaml`, `.yml`
+
+#### Document Files
+
+- **PDF**: `.pdf`
+- **Microsoft Office**: `.docx`, `.xlsx`, `.pptx`
+- **OpenDocument**: `.odt`, `.ods`, `.odp`
+- **RTF**: `.rtf`
+
+#### Image Files
+
+- **Common Formats**: `.jpg`, `.jpeg`, `.png`, `.gif`, `.bmp`, `.webp`
+- **Vector Graphics**: `.svg`
+- **RAW Formats**: `.tiff`, `.tif`
+
+#### Data Files
+
+- **Spreadsheets**: `.csv`, `.tsv`
+- **Structured Data**: `.json`, `.xml`
+- **Configuration**: `.ini`, `.conf`, `.config`
+
+### API Usage
+
+#### File Upload Endpoint
+
+The main chat endpoint supports file uploads via multipart/form-data:
+
+```http
+POST /api/v1/root_agent/
+Content-Type: multipart/form-data
+
+Form Fields:
+- text: "Your message text" (optional if files provided)
+- model: "gemini-2.5-flash" (optional)
+- files: [file1, file2, ...] (one or more files)
+```
+
+#### Request Examples
+
+**Text with Files**:
+
+```bash
+curl -X POST "http://localhost:8080/api/v1/root_agent/" \
+  -H "X-Session-ID: your-session-id" \
+  -F "text=Please analyze these documents" \
+  -F "files=@document1.pdf" \
+  -F "files=@data.csv" \
+  -F "model=gemini-2.5-pro"
+```
+
+**Files Only**:
+
+```bash
+curl -X POST "http://localhost:8080/api/v1/root_agent/" \
+  -H "X-Session-ID: your-session-id" \
+  -F "files=@image.png" \
+  -F "files=@report.docx"
+```
+
+#### Response Format
+
+```json
+{
+  "response": "I've analyzed your uploaded files. The PDF document contains...",
+  "references": {},
+  "session_id": "uuid-session-id",
+  "model": "gemini-2.5-pro",
+  "confidence": null
+}
+```
+
+### Frontend Integration
+
+The frontend automatically handles file uploads through the chat interface:
+
+#### File Selection
+
+- Users can click the "+" button to select files
+- Multiple files can be selected simultaneously
+- Files are displayed as chips with name and size
+- Individual files can be removed before sending
+
+#### File Display
+
+```typescript
+// Files are shown as removable chips
+<FileChip
+  fileName={file.name}
+  fileSize={file.size}
+  fileType={file.type}
+  onRemove={() => handleRemoveFile(id)}
+/>
+```
+
+#### API Integration
+
+```typescript
+// Frontend sends files with text
+const response = await sendMessage(userMessage, files, {
+  signal: abortController.signal,
+  model: selectedModel,
+});
+```
+
+### Artifact Storage Architecture
+
+#### Storage Flow
+
+1. **Upload**: Files uploaded via multipart/form-data
+2. **Validation**: MIME type detection and file validation
+3. **Processing**: Unique filename generation with timestamp and UUID
+4. **Storage**: Files stored as ADK artifacts in session context
+5. **Integration**: Artifacts immediately available to AI agents
+
+#### Filename Generation
+
+```python
+# Generated filename format
+timestamp = int(time.time())
+unique_id = str(uuid.uuid4())[:8]
+artifact_filename = f'{timestamp}_{unique_id}_{original_filename}'
+```
+
+#### Session Association
+
+```python
+# Files are stored per session and user
+await artifact_service.save_artifact(
+    app_name=config.app_name,
+    user_id=config.user_id,
+    session_id=session_id,
+    filename=artifact_filename,
+    artifact=artifact_part,
+)
+```
+
+### Agent Integration
+
+Uploaded files are automatically available to AI agents through the ADK artifact system:
+
+#### Agent Access Pattern
+
+```python
+# Agents can access uploaded files through the session context
+# Files are provided as ADK Part objects with proper MIME types
+# The agent can process text, images, documents, and data files
+```
+
+#### Processing Capabilities
+
+- **Text Analysis**: Read and analyze document contents
+- **Image Recognition**: Process and describe images
+- **Data Processing**: Analyze CSV, JSON, and structured data
+- **Code Review**: Examine and provide feedback on code files
+- **Document Summarization**: Extract key information from PDFs and documents
+
+### Configuration
+
+#### File Validation Settings
+
+```python
+# File validator configuration
+class FileValidator:
+    def __init__(self):
+        self.max_file_size = 10 * 1024 * 1024  # 10MB default
+        self.allowed_mime_types = {
+            'text/plain', 'text/markdown', 'application/pdf',
+            'image/jpeg', 'image/png', 'text/csv', ...
+        }
+```
+
+#### Environment Variables
+
+```bash
+# Optional file upload configuration
+MAX_FILE_SIZE=10485760  # 10MB in bytes
+ALLOWED_FILE_TYPES=pdf,txt,md,csv,json,png,jpg  # Comma-separated
+```
+
+### Error Handling
+
+#### Common Error Responses
+
+**No Content Provided**:
+
+```json
+{
+  "detail": "Must provide either text message or file attachments",
+  "status_code": 400
+}
+```
+
+**File Validation Failed**:
+
+```json
+{
+  "detail": "Uploaded file 'document.exe' has invalid type",
+  "status_code": 400
+}
+```
+
+**File Too Large**:
+
+```json
+{
+  "detail": "File size exceeds maximum limit of 10MB",
+  "status_code": 413
+}
+```
+
+### Security Considerations
+
+#### File Validation
+
+- MIME type validation based on file content, not just extension
+- File size limits to prevent abuse
+- Filename sanitization to prevent path traversal
+- Session-based access control
+
+#### Storage Security
+
+- Files are stored per session and user
+- Unique filename generation prevents conflicts
+- Files are not directly accessible via HTTP
+- Automatic cleanup of expired sessions
+
+### Performance Optimization
+
+#### Efficient Processing
+
+- Streaming file uploads for large files
+- Asynchronous file processing
+- MIME type detection using python-magic
+- Batch processing for multiple files
+
+#### Memory Management
+
+- Files processed in chunks to minimize memory usage
+- Automatic garbage collection of processed files
+- Session-based artifact cleanup
+
+### Development Examples
+
+#### Testing File Uploads
+
+**Python Test**:
+
+```python
+import requests
+
+# Upload files with message
+files = {
+    'files': ('test.txt', open('test.txt', 'rb'), 'text/plain'),
+    'files': ('data.csv', open('data.csv', 'rb'), 'text/csv')
+}
+data = {
+    'text': 'Please analyze these files',
+    'model': 'gemini-2.5-pro'
+}
+
+response = requests.post(
+    'http://localhost:8080/api/v1/root_agent/',
+    files=files,
+    data=data,
+    headers={'X-Session-ID': 'test-session'}
+)
+```
+
+**JavaScript Test**:
+
+```javascript
+const formData = new FormData();
+formData.append("text", "Analyze this document");
+formData.append("files", fileInput.files[0]);
+formData.append("model", "gemini-2.5-flash");
+
+const response = await fetch("/api/v1/root_agent/", {
+  method: "POST",
+  headers: {
+    "X-Session-ID": sessionId,
+  },
+  body: formData,
+});
+```
+
+### Monitoring and Debugging
+
+#### Logging
+
+File upload operations are logged with detailed information:
+
+```
+2025-01-17 10:30:45 | INFO | Received file upload: document.pdf (1.2MB)
+2025-01-17 10:30:45 | INFO | File validated successfully: application/pdf
+2025-01-17 10:30:45 | INFO | Artifact saved: 1737123045_abc12345_document.pdf
+2025-01-17 10:30:45 | INFO | File available to agent for session: uuid-session-id
+```
+
+#### Health Checks
+
+```bash
+# Test file upload functionality
+curl -X POST "http://localhost:8080/api/v1/root_agent/" \
+  -F "text=test" \
+  -F "files=@small-test-file.txt"
+```
+
+### Troubleshooting
+
+#### Common Issues
+
+**"Must provide either text message or file attachments"**:
+
+- Ensure at least one of `text` or `files` is provided
+- Check that form fields are properly named
+
+**"File type not supported"**:
+
+- Verify file type is in the supported list
+- Check MIME type detection is working correctly
+
+**"File too large"**:
+
+- Reduce file size or increase `MAX_FILE_SIZE` limit
+- Consider splitting large files into smaller chunks
+
+**Files not accessible to agent**:
+
+- Verify session ID consistency between requests
+- Check artifact service initialization
+- Ensure proper session middleware configuration
 
 ### Chat Endpoint
+
+The main endpoint supports both text messages and file uploads via multipart/form-data:
+
+```http
+POST /api/v1/root_agent/
+Content-Type: multipart/form-data
+
+Form Fields:
+- text: "Your message here" (optional if files provided)
+- model: "gemini-2.5-flash" (optional)
+- files: [file1, file2, ...] (optional)
+```
+
+**Legacy JSON Support** (for backwards compatibility):
 
 ```http
 POST /api/v1/root_agent/
@@ -405,7 +786,7 @@ Content-Type: application/json
 }
 ```
 
-Response:
+**Response Format**:
 
 ```json
 {
