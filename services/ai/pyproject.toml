@@ -20,6 +20,7 @@ dependencies = [
     "google-cloud-discoveryengine",
     "gunicorn>=23.0.0",
     "pip>=25.2",
+    "pypdf2>=3.0.1",
     # Indexing pipeline dependencies
     "lancedb>=0.3.0",
     "sentence-transformers>=2.2.0",

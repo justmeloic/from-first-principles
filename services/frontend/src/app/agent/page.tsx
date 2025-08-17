@@ -179,7 +179,7 @@ export default function AgentPage() {
   }, [isLoading]);
 
   const handleSend = useCallback(
-    async (userMessage: string) => {
+    async (userMessage: string, files?: File[]) => {
       if (isLoading) return;
 
       if (isFirstPrompt) {
@@ -202,7 +202,7 @@ export default function AgentPage() {
       setTimeout(scrollToBottom, 0);
 
       try {
-        const response = await sendMessage(userMessage, {
+        const response = await sendMessage(userMessage, files, {
           signal: abortControllerRef.current.signal,
         });
 
@@ -293,10 +293,11 @@ export default function AgentPage() {
           <Button
             onClick={clearChat}
             size="sm"
-            className="rounded-full bg-white dark:bg-dark-mode-gray-secondary-bg text-gray-600 dark:text-gray-300/50 hover:text-white dark:hover:text-white hover:bg-accent dark:hover:bg-accent flex items-center gap-2 shadow-md hover:shadow-lg transition-all duration-200 border-0"
+            className="rounded-full w-10 h-10 p-0 bg-white dark:bg-dark-mode-gray-secondary-bg text-gray-600 dark:text-gray-300/50 hover:text-white dark:hover:text-white hover:bg-accent dark:hover:bg-accent flex items-center justify-center shadow-md hover:shadow-lg transition-all duration-200 border-0"
+            title="New Conversation"
           >
             <svg
-              className="w-6 h-6"
+              className="w-5 h-5"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"

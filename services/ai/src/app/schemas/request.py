@@ -19,7 +19,7 @@ This module defines the Pydantic models for validating incoming API requests.
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import List, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -31,6 +31,10 @@ class Query(BaseModel):
     model: Optional[str] = Field(
         default=None,
         description='Model to use for this query. If not provided, uses default',
+    )
+    file_artifacts: Optional[List[str]] = Field(
+        default=None,
+        description='List of artifact IDs for files uploaded with this message',
     )
 
     @field_validator('text')

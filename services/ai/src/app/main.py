@@ -31,12 +31,11 @@ Features:
 - GCP environment configuration
 """
 
-import os
 from contextlib import asynccontextmanager
 
-from dotenv import load_dotenv
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from google.adk.artifacts import InMemoryArtifactService
 from google.adk.sessions import InMemorySessionService
 from loguru import logger as _logger
 
@@ -45,33 +44,6 @@ from src.app.core.config import settings
 from src.app.core.logging import setup_logging
 from src.app.middleware.session_middleware import SessionMiddleware
 from src.app.staticfrontend.router import register_frontend_routes
-
-
-def configure_gcp_environment() -> None:
-    """
-    Configure Google Cloud Platform environment variables.
-
-    This configuration is essential when GOOGLE_GENAI_USE_VERTEXAI=TRUE as the
-    VertexAI service will be accessed through the GCP platform.
-    Note: GCP configuration is now optional and will only be set if
-    environment variables are available.
-    """
-    load_dotenv()
-
-    # Optional GCP configuration - only set if variables are available
-    google_project = os.getenv('GOOGLE_CLOUD_PROJECT')
-    google_location = os.getenv('GOOGLE_CLOUD_LOCATION')
-
-    if google_project:
-        os.environ['GOOGLE_CLOUD_PROJECT'] = google_project
-        _logger.info(f"Set GOOGLE_CLOUD_PROJECT: {google_project}")
-
-    if google_location:
-        os.environ['GOOGLE_CLOUD_LOCATION'] = google_location
-        _logger.info(f"Set GOOGLE_CLOUD_LOCATION: {google_location}")
-
-    if not google_project and not google_location:
-        _logger.info("No GCP environment variables found - continuing without GCP config")
 
 
 @asynccontextmanager
@@ -94,9 +66,12 @@ async def lifespan(app: FastAPI):
         startup and shutdown phases.
     """
     setup_logging()
-    _logger.info('Starting Agent Orchestration API...')
-    configure_gcp_environment()
+    _logger.info('Starting AI Backend API...')
+
     app.state.session_service = InMemorySessionService()
+    app.state.artifact_service = InMemoryArtifactService()
+    _logger.info('Initialized in memory ( artifact & session) services')
+
     yield
     _logger.info('Shutting down Agent Orchestration API...')
 
