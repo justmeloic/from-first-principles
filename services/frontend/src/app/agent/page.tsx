@@ -179,7 +179,7 @@ export default function AgentPage() {
   }, [isLoading]);
 
   const handleSend = useCallback(
-    async (userMessage: string) => {
+    async (userMessage: string, files?: File[]) => {
       if (isLoading) return;
 
       if (isFirstPrompt) {
@@ -202,7 +202,7 @@ export default function AgentPage() {
       setTimeout(scrollToBottom, 0);
 
       try {
-        const response = await sendMessage(userMessage, {
+        const response = await sendMessage(userMessage, files, {
           signal: abortControllerRef.current.signal,
         });
 

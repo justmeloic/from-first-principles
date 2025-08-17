@@ -28,24 +28,34 @@ export interface SendMessageOptions {
 
 export const sendMessage = async (
   message: string,
+  files?: File[],
   options?: SendMessageOptions
 ): Promise<MessageResponse> => {
   try {
     const storedSessionId = localStorage.getItem('agentChatSessionId');
 
-    const requestBody: { text: string; model?: string } = { text: message };
+    // Always use FormData since the backend expects Form/File parameters
+    const formData = new FormData();
+    formData.append('text', message);
+
     if (options?.model) {
-      requestBody.model = options.model;
+      formData.append('model', options.model);
+    }
+
+    // Add files if provided
+    if (files && files.length > 0) {
+      files.forEach((file) => {
+        formData.append('files', file);
+      });
     }
 
     const response = await fetch(`${BASE_URL}/api/v1/root_agent/`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'X-Session-ID': storedSessionId || '', // Always send the header, even if empty
+        'X-Session-ID': storedSessionId || '', // Don't set Content-Type for FormData
       },
-      body: JSON.stringify(requestBody),
-      signal: options?.signal, // Add abort signal support
+      body: formData,
+      signal: options?.signal,
     });
 
     if (!response.ok) {
