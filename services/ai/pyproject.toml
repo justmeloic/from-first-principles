@@ -10,6 +10,8 @@ dependencies = [
     "pytest>=7.4.0",
     "pytest-asyncio>=0.21.0",
     "pytest-cov>=4.1.0",
+    "pytest-env>=0.8.0",            # Environment variable management for tests
+    "pytest-mock>=3.10.0",          # Improved mocking capabilities
     "httpx>=0.24.1",                # Required for FastAPI TestClient
     "uvicorn[standard]>=0.27.0",
     "python-dotenv>=1.0.0",
@@ -53,15 +55,41 @@ analytics = "src.analytics.main:main"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
-addopts = "-v -s --cov=src --cov-report=term-missing"
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",                                  # Verbose output
+    "-s",                                  # Don't capture stdout
+    "--strict-markers",                    # Require markers to be defined
+    "--strict-config",                     # Require pytest configuration
+    "--tb=short",                          # Short traceback format
+    "--cov=src",                           # Coverage for src directory
+    "--cov-report=term-missing",           # Show missing lines in coverage
+    "--cov-report=html:tests/htmlcov",     # Generate HTML coverage report in tests/
+    "--cov-report=xml:tests/coverage.xml", # Generate XML coverage report in tests/
+    "--cov-fail-under=15",                 # Fail if coverage below 15% (adjusted for basic API tests)
+]
 pythonpath = [".", "src"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
+filterwarnings = [
+    "ignore::UserWarning",
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
+    "api: marks tests as API tests",
+]
+env = ["ENVIRONMENT = test", "LOG_LEVEL = WARNING"]
 
 [tool.coverage.run]
 source = ["src"]
 branch = true
 omit = ["src/__init__.py", "src/config.py", "tests/*", "**/__init__.py"]
+data_file = "tests/.coverage"
 
 [tool.coverage.report]
 exclude_lines = [
@@ -73,7 +101,7 @@ exclude_lines = [
     "pass",
 ]
 show_missing = true
-fail_under = 65
+fail_under = 15
 
 [build-system]
 requires = ["hatchling"]

@@ -235,6 +235,9 @@ yarn-error.log*
 # Coverage reports
 .coverage.*
 htmlcov/
+tests/htmlcov/
+tests/coverage.xml
+tests/.coverage
 
 # Profiling data
 .prof

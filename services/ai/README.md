@@ -2,11 +2,65 @@
 
 ![Python](https://img.shields.io/badge/python-v3.11+-blue.svg)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg)
-![Google ADK](https://img.shields.io/badge/Google_ADK-1.5.0+-4285F4.svg)
-![GCP](https://img.shields.io/badge/Google_Cloud-4285F4?logo=google-cloud&logoColor=white)
+![ADK](https://img.shields.io/badge/ADK-1.5.0+-4285F4.svg)
 ![Ollama](https://img.shields.io/badge/Ollama-Local_AI-00B4D8?logo=ollama&logoColor=white)
 
-AI backend service for the From First Principles platform, providing intelligent chat capabilities and semantic content indexing powered by Google's Gemini models, local Ollama models, and modern vector search technology.
+AI backend service for the From First Principles platform, providing intelligent chat capabilities and semantic content indexing powered by various AI models including local Ollama models, API-based models, or cloud-hosted services.
+
+## Quick Start with Makefile Commands
+
+This project includes a comprehensive Makefile that simplifies all common operations. Here are the most frequently used commands:
+
+### Essential Commands
+
+```bash
+# Setup and Installation
+make setup              # Complete project setup (environment + dependencies)
+make help               # Show all available commands with descriptions
+
+# Development
+make dev                # Start development server with auto-reload
+make dev-bg            # Start development server in background
+make prod              # Start production server
+
+# Server Management
+make status            # Check server status
+make restart           # Restart server
+make stop              # Stop server
+make logs              # View access logs
+make logs-error        # View error logs
+make health            # Check if server is responding
+
+# Content Indexing
+make index-test        # Test indexing pipeline
+make index-all         # Index all blog content
+make index-search      # Run example semantic search
+make index-stats       # Show indexing statistics
+
+# Testing and Quality
+make test              # Run tests
+make test-cov          # Run tests with coverage
+make lint              # Run code linting
+make format            # Format code
+make clean             # Clean up temporary files
+```
+
+### Quick Development Workflow
+
+```bash
+# Initial setup
+make setup
+
+# Start developing
+make dev
+
+# In another terminal - test indexing
+make index-test
+make index-all
+
+# Run tests
+make test
+```
 
 ## Overview
 
@@ -16,7 +70,7 @@ This service provides a comprehensive AI platform with two main components:
 
 A FastAPI-based backend that hosts an agent with the following functionalities:
 
-- **Multi-Model Support**: Choose between Google Gemini models or local Ollama models
+- **Multi-Model Support**: Choose between API-based models, cloud services, or local Ollama models
 - **Session Management**: Persistent conversation history across multiple interactions
 - **File Upload & Artifact Service**: Support for file attachments with automatic processing and integration
 - **CORS Configuration**: Secure cross-origin requests from the frontend
@@ -46,14 +100,14 @@ graph TD
     A[Frontend - fromfirstprinciple.com] --> B[AI Service API]
     A --> K[Content Search]
 
-    B --> C[Google ADK Session Management]
+    B --> C[ADK Session Management]
     B --> AF[Artifact Service]
     B --> D{Model Provider}
     C --> E[In-Memory Session Store]
     AF --> AS[File Storage & Processing]
-    D --> F[Gemini Models]
+    D --> F[API-based Models]
     D --> G[Ollama Models]
-    F --> H[Vertex AI / Google AI Studio]
+    F --> H[Cloud Services / API Endpoints]
     G --> I[Local Ollama Server]
 
     A --> FU[File Uploads]
@@ -92,8 +146,11 @@ graph TD
 
 - Python 3.11+
 - uv package manager
-- Google Cloud CLI (for Vertex AI)
 - ngrok (for production deployment)
+- AI Model Access (choose one):
+  - API key for cloud-based models (e.g., OpenAI, Anthropic)
+  - Cloud service account (e.g., GCP, AWS, Azure)
+  - Local Ollama installation for local models
 
 ### Project Structure
 
@@ -130,27 +187,23 @@ services/ai/
 git clone <repository-url>
 cd services/ai
 
-# Create virtual environment and install dependencies
-uv venv
-uv sync
-
-# Install the package in editable mode (enables index-cli command)
-uv pip install -e .
+# Complete project setup (environment + dependencies)
+make setup
 ```
 
 2. **Verify installation**:
 
 ```bash
-# Test that the CLI is properly installed
-index-cli --help
-
 # Test the indexing pipeline
-index-cli test
+make index-test
+
+# Show available commands
+make help
 ```
 
 This installs all dependencies including:
 
-- **Chat Service**: FastAPI, Google ADK, session management
+- **Chat Service**: FastAPI, ADK, session management
 - **Indexing Pipeline**: sentence-transformers, LanceDB, typer, rich
 - **CLI Tools**: Modern `index-cli` command with beautiful output
 
@@ -161,11 +214,13 @@ cp .env.example .env
 # Edit .env with your configuration (see Configuration section)
 ```
 
-3. **Set up Google Cloud authentication**:
+3. **Set up your AI model access**:
 
-```bash
-gcloud auth application-default login
-```
+Choose one of the following options:
+
+- **API Key**: Set your API key in the `.env` file for cloud-based models
+- **Cloud Service**: Configure cloud service credentials according to your provider's documentation
+- **Local Models**: Install and configure Ollama for local AI processing
 
 ### Configuration
 
@@ -179,13 +234,16 @@ HOST=0.0.0.0
 PORT=8081
 ENVIRONMENT=development
 
-# Google Cloud Settings (for Gemini models)
-GOOGLE_CLOUD_PROJECT=your-gcp-project-id
-GOOGLE_CLOUD_LOCATION=us-central1
-GOOGLE_API_KEY=your-google-api-key
+# Model Configuration - Choose your provider
+MODEL_PROVIDER=ollama  # Options: 'ollama', 'openai', 'anthropic', 'gemini', etc.
 
-# Model Configuration
-MODEL_PROVIDER=gemini  # or 'ollama' for local models
+# API-based Model Settings (when using cloud/API models)
+# Uncomment and configure based on your chosen provider:
+# OPENAI_API_KEY=your-openai-api-key
+# ANTHROPIC_API_KEY=your-anthropic-api-key
+# GOOGLE_API_KEY=your-google-api-key
+# GOOGLE_CLOUD_PROJECT=your-gcp-project-id
+# GOOGLE_CLOUD_LOCATION=us-central1
 
 # Ollama Settings (when MODEL_PROVIDER=ollama)
 OLLAMA_API_BASE=http://localhost:11434
@@ -198,6 +256,12 @@ AUTH_SECRET=your-super-secret-key
 # Frontend URL for CORS
 FRONTEND_URL=http://localhost:3000
 ```
+
+> **Note**: You need to configure at least one model provider. The service uses ADK (Agent Development Kit) which can work with various AI models. Choose your preferred approach:
+>
+> - **Local Models**: Use Ollama for privacy and offline capability
+> - **API Services**: Use cloud APIs for powerful models (requires API keys)
+> - **Cloud Platforms**: Use cloud services for enterprise features (requires service accounts)
 
 #### CORS Configuration
 
@@ -213,11 +277,20 @@ For ngrok integration (see Ngrok Setup section):
 FRONTEND_URL=https://your-ngrok-url.ngrok-free.app,https://fromfirstprinciple.com,http://localhost:3000
 ```
 
-## Ollama Model Integration
+## AI Model Integration
 
-The AI service supports both Gemini and Ollama models through a configurable provider system. You can switch between providers using environment variables for local, private AI processing.
+The AI service supports multiple model providers through a configurable provider system. You can choose between API-based models, cloud services, or local models for private AI processing.
 
-### Ollama Prerequisites
+### Model Provider Options
+
+#### 1. Local Models (Ollama) - Privacy & Offline
+
+**Benefits**: Complete privacy, no API costs, offline capability, full control
+**Requirements**: Local compute resources
+
+**Setup**:
+
+**Setup**:
 
 1. **Install Ollama**: Download and install Ollama from [https://ollama.ai](https://ollama.ai)
 
@@ -238,119 +311,207 @@ The AI service supports both Gemini and Ollama models through a configurable pro
    ollama show mistral-small3.1
    ```
 
-### Ollama Configuration
+#### 2. API-based Models - Powerful & Convenient
 
-Add these settings to your `.env` file:
+**Benefits**: Access to latest models, no local compute needed, easy setup
+**Requirements**: API keys, internet connection
+
+**Popular Options**:
+
+- **OpenAI**: GPT-4, GPT-3.5-turbo
+- **Anthropic**: Claude 3, Claude 2
+- **Google**: Gemini models
+- **Others**: Cohere, AI21, etc.
+
+**Setup**: Add your API key to `.env` file based on your chosen provider.
+
+#### 3. Cloud Services - Enterprise & Scale
+
+**Benefits**: Enterprise features, scalability, managed infrastructure
+**Requirements**: Cloud service accounts, billing setup
+
+**Options**:
+
+- **Google Cloud Platform**: Vertex AI
+- **AWS**: Bedrock
+- **Azure**: OpenAI Service
+- **Others**: Various cloud ML platforms
+
+### Configuration
+
+Example configurations for different providers:
 
 ```bash
-# Model provider: 'gemini' or 'ollama'
+# For Ollama (local models)
 MODEL_PROVIDER=ollama
-
-# Ollama configuration (used when MODEL_PROVIDER=ollama)
 OLLAMA_API_BASE=http://localhost:11434
 OLLAMA_MODEL=mistral-small3.1
 OLLAMA_MODEL_PRO=llama3.2
+
+# For OpenAI
+MODEL_PROVIDER=openai
+OPENAI_API_KEY=your-openai-api-key
+
+# For Anthropic
+MODEL_PROVIDER=anthropic
+ANTHROPIC_API_KEY=your-anthropic-api-key
+
+# For Google Gemini
+MODEL_PROVIDER=gemini
+GOOGLE_API_KEY=your-google-api-key
 ```
 
 ### Available Models
 
-#### Gemini Models (provider: gemini)
-
-- `gemini-2.5-flash`: Fast model for quick responses
-- `gemini-2.5-pro`: Advanced model for complex reasoning
-
-#### Ollama Models (provider: ollama)
+#### Local Models (Ollama)
 
 - `mistral-small3.1`: Mistral Small with tool support
 - `llama3.2`: Meta Llama 3.2 with tool support
+- `codellama`: Code-focused model
+- `neural-chat`: Optimized for conversations
+
+#### API-based Models
+
+- **OpenAI**: `gpt-4`, `gpt-3.5-turbo`
+- **Anthropic**: `claude-3-opus`, `claude-3-sonnet`
+- **Google**: `gemini-pro`, `gemini-pro-vision`
+- **Others**: Configurable based on provider
 
 ### Model Selection
 
-The system automatically selects models based on the provider:
+The system automatically selects models based on the provider configuration:
 
 - **Default Model**: Used for standard operations
-
-  - Gemini: `gemini-2.5-flash`
-  - Ollama: `mistral-small3.1`
-
 - **Pro Model**: Used for complex reasoning (agents use this)
-  - Gemini: `gemini-2.5-pro`
-  - Ollama: `llama3.2`
+
+Configure your preferred models in the `.env` file based on your chosen provider.
 
 ### Switching Between Providers
 
-To use Gemini models:
+Update your `.env` file with the desired provider:
 
 ```bash
-MODEL_PROVIDER=gemini
-```
-
-To use Ollama models:
-
-```bash
+# For local privacy
 MODEL_PROVIDER=ollama
+
+# For API access
+MODEL_PROVIDER=openai
+# or
+MODEL_PROVIDER=anthropic
 ```
 
 After changing the provider, restart the service:
 
 ```bash
-./scripts/deploy-server.sh restart
+make restart
 ```
 
-### Testing Ollama Integration
+### Testing Model Integration
 
 Run the integration test to verify everything works:
 
 ```bash
-python test_ollama_integration.py
+# Test your configured model provider
+python tests/test_integration.py
+
+# Or run the specific model integration test
+python tests/test_model_integration.py
 ```
 
-### Ollama Troubleshooting
+### Model Integration Troubleshooting
 
 #### Common Issues
 
-1. **"Failed to create Ollama model"**
+1. **"Failed to create model"**
 
-   - Ensure Ollama is running: `ollama serve`
-   - Check the model is available: `ollama list`
-   - Verify API base URL: `curl http://localhost:11434/api/tags`
+   - **For Ollama**: Ensure Ollama is running: `ollama serve`
+   - **For API models**: Check your API key is valid and has sufficient quota
+   - **For Cloud services**: Verify authentication and service permissions
 
-2. **Tool calling issues**
-   - Verify the model supports tools: `ollama show <model-name>`
-   - Use models specifically designed for tool use
+2. **Model not found errors**
+
+   - **For Ollama**: Check the model is available: `ollama list`
+   - **For API models**: Verify model name matches provider's available models
+   - **For Cloud services**: Ensure the model is available in your region
+
+3. **Authentication issues**
+   - **For API models**: Verify API key format and permissions
+   - **For Cloud services**: Check service account credentials and roles
 
 #### Model Recommendations
 
-For reliable tool support with Ollama:
+**For Tool Support**:
 
-- **Mistral Small 3.1**: Excellent tool support, good performance
-- **Llama 3.2**: Good balance of capabilities and tool support
+- **Ollama**: Mistral Small 3.1, Llama 3.2
+- **OpenAI**: GPT-4, GPT-3.5-turbo
+- **Anthropic**: Claude 3 models
+- **Google**: Gemini Pro models
+
+**For Performance**:
+
+- **Fast responses**: Use smaller, optimized models
+- **Complex reasoning**: Use larger, more capable models
+- **Local privacy**: Ollama models with adequate local resources
 
 #### Performance Notes
 
-- Ollama models run locally, providing privacy but requiring local resources
-- First requests might be slower as models load into memory
-- Consider model size vs. available RAM when choosing models
+- **Local models**: Provide privacy but require local compute resources
+- **API models**: Fast and powerful but require internet and API costs
+- **Cloud services**: Enterprise features but more complex setup
+- **First requests**: May be slower as models initialize
 
 ### Running the Service
 
 #### Development Mode
 
 ```bash
-./scripts/deploy-server.sh start --dev
+make dev
+```
+
+#### Development Mode (Background)
+
+```bash
+make dev-bg
 ```
 
 #### Production Mode
 
 ```bash
-./scripts/deploy-server.sh start --port 8080
+make prod
+```
+
+#### Production with Custom Workers
+
+```bash
+make prod-workers WORKERS=8
 ```
 
 The service will be available at:
 
-- **API Documentation**: `http://localhost:8080/docs`
-- **Health Check**: `http://localhost:8080/api/v1/health`
-- **Chat Endpoint**: `http://localhost:8080/api/v1/root_agent/`
+- **API Documentation**: `http://localhost:8081/docs`
+- **Health Check**: `http://localhost:8081/api/v1/health`
+- **Chat Endpoint**: `http://localhost:8081/api/v1/root_agent/`
+
+#### Service Management
+
+```bash
+# Check server status
+make status
+
+# Stop service
+make stop
+
+# Restart service
+make restart
+
+# View logs
+make logs           # Access logs
+make logs-error     # Error logs
+make logs-all       # Both logs
+
+# Server health check
+make health
+```
 
 ## Ngrok Integration
 
@@ -361,13 +522,13 @@ For exposing your local AI service to the internet (useful for production fronte
 1. **Start the AI service**:
 
 ```bash
-./scripts/deploy-server.sh start --port 8080
+make prod
 ```
 
 2. **Start ngrok tunnel**:
 
 ```bash
-ngrok http 8080
+ngrok http 8081
 ```
 
 3. **Update CORS configuration**:
@@ -380,7 +541,7 @@ FRONTEND_URL=https://abc123.ngrok-free.app,https://fromfirstprinciple.com,http:/
 4. **Restart the service**:
 
 ```bash
-./scripts/deploy-server.sh restart --port 8080
+make restart
 ```
 
 5. **Update frontend configuration**:
@@ -461,7 +622,7 @@ Content-Type: multipart/form-data
 
 Form Fields:
 - text: "Your message text" (optional if files provided)
-- model: "gemini-2.5-flash" (optional)
+- model: "gpt-4" (optional)
 - files: [file1, file2, ...] (one or more files)
 ```
 
@@ -470,18 +631,18 @@ Form Fields:
 **Text with Files**:
 
 ```bash
-curl -X POST "http://localhost:8080/api/v1/root_agent/" \
+curl -X POST "http://localhost:8081/api/v1/root_agent/" \
   -H "X-Session-ID: your-session-id" \
   -F "text=Please analyze these documents" \
   -F "files=@document1.pdf" \
   -F "files=@data.csv" \
-  -F "model=gemini-2.5-pro"
+  -F "model=gpt-4"
 ```
 
 **Files Only**:
 
 ```bash
-curl -X POST "http://localhost:8080/api/v1/root_agent/" \
+curl -X POST "http://localhost:8081/api/v1/root_agent/" \
   -H "X-Session-ID: your-session-id" \
   -F "files=@image.png" \
   -F "files=@report.docx"
@@ -494,7 +655,7 @@ curl -X POST "http://localhost:8080/api/v1/root_agent/" \
   "response": "I've analyzed your uploaded files. The PDF document contains...",
   "references": {},
   "session_id": "uuid-session-id",
-  "model": "gemini-2.5-pro",
+  "model": "gpt-4",
   "confidence": null
 }
 ```
@@ -685,7 +846,7 @@ files = {
 }
 data = {
     'text': 'Please analyze these files',
-    'model': 'gemini-2.5-pro'
+    'model': 'gpt-4'
 }
 
 response = requests.post(
@@ -702,7 +863,7 @@ response = requests.post(
 const formData = new FormData();
 formData.append("text", "Analyze this document");
 formData.append("files", fileInput.files[0]);
-formData.append("model", "gemini-2.5-flash");
+formData.append("model", "claude-3-sonnet");
 
 const response = await fetch("/api/v1/root_agent/", {
   method: "POST",
@@ -730,9 +891,12 @@ File upload operations are logged with detailed information:
 
 ```bash
 # Test file upload functionality
-curl -X POST "http://localhost:8080/api/v1/root_agent/" \
+curl -X POST "http://localhost:8081/api/v1/root_agent/" \
   -F "text=test" \
   -F "files=@small-test-file.txt"
+
+# Or use the health check command
+make health
 ```
 
 ### Troubleshooting
@@ -770,7 +934,7 @@ Content-Type: multipart/form-data
 
 Form Fields:
 - text: "Your message here" (optional if files provided)
-- model: "gemini-2.5-flash" (optional)
+- model: "gpt-4" (optional)
 - files: [file1, file2, ...] (optional)
 ```
 
@@ -782,7 +946,7 @@ Content-Type: application/json
 
 {
   "text": "Your message here",
-  "model": "gemini-2.5-flash"  // optional
+  "model": "claude-3-sonnet"  // optional
 }
 ```
 
@@ -793,7 +957,7 @@ Content-Type: application/json
   "response": "AI response",
   "references": {},
   "session_id": "uuid",
-  "model": "gemini-2.5-flash",
+  "model": "claude-3-sonnet",
   "confidence": null
 }
 ```
@@ -809,24 +973,29 @@ GET /api/v1/root_agent/models
 ```python
 from agents.model_factory import create_model, get_default_model, get_pro_model
 
-# Create specific models
-gemini_model = create_model('gemini-2.5-flash')
+# Create specific models based on your provider
+openai_model = create_model('gpt-4')
+anthropic_model = create_model('claude-3-sonnet')
 ollama_model = create_model('mistral-small3.1')
 
-# Get models based on current provider
+# Get models based on current provider configuration
 default_model = get_default_model()
 pro_model = get_pro_model()
 ```
 
 ### Health Check
 
-```http
+```bash
+# Using Make command
+make health
+
+# Or direct API call
 GET /api/v1/health
 ```
 
 ## Session Management
 
-The service uses Google ADK for session management, providing:
+The service uses ADK (Agent Development Kit) for session management, providing:
 
 - **Persistent conversations**: Chat history maintained across requests
 - **Session isolation**: Each session has its own conversation context
@@ -845,24 +1014,47 @@ The service uses Google ADK for session management, providing:
 ### Production Deployment
 
 ```bash
-./scripts/deploy-server.sh start
+make prod
 ```
 
 ### Service Management
 
 ```bash
 # Check status
-./scripts/deploy-server.sh status
+make status
 
 # Stop service
-./scripts/deploy-server.sh stop
+make stop
 
 # Restart service
-./scripts/deploy-server.sh restart
+make restart
 
 # View logs
-tail -f logs/access.log
-tail -f logs/error.log
+make logs
+make logs-error
+make logs-all
+```
+
+### Testing and Development
+
+```bash
+# Run tests
+make test
+
+# Run tests with coverage
+make test-cov
+
+# Run linting
+make lint
+
+# Format code
+make format
+
+# Run all checks
+make check
+
+# Clean up temporary files
+make clean
 ```
 
 ## Troubleshooting
@@ -877,9 +1069,9 @@ tail -f logs/error.log
 
 #### Connection Issues
 
-- Verify service is running: `curl http://localhost:8080/api/v1/health`
-- Check logs: `tail -f logs/error.log`
-- Ensure port is not in use: `lsof -i :8080`
+- Verify service is running: `make health` or `curl http://localhost:8081/api/v1/health`
+- Check logs: `make logs-error`
+- Ensure port is not in use: `lsof -i :8081`
 
 #### Ngrok Issues
 
@@ -894,20 +1086,48 @@ Service logs are available in the `logs/` directory:
 - `access.log`: HTTP request logs
 - `error.log`: Error and debug logs
 
+Use Makefile commands for easy log viewing:
+
+```bash
+make logs           # View access logs (tail -f)
+make logs-error     # View error logs (tail -f)
+make logs-all       # View both logs simultaneously
+```
+
+## Makefile Tips
+
+The included Makefile provides color-coded output and helpful descriptions for all commands:
+
+```bash
+# See all available commands with descriptions
+make help
+
+# Get command-specific help
+make index-help
+
+# Quick project reset (stop server, clean files)
+make reset
+```
+
+All Makefile commands automatically handle:
+
+- Virtual environment activation
+- Dependency installation checks
+- Environment validation
+- Error handling with colored output
+
 4. **Quick Start**:
 
 ```bash
-# Test the indexing pipeline
-index-cli test
+# Complete setup and start development
+make quick-start
 
-# Start the chat API service
-./scripts/deploy-server.sh start --dev
-
-# Index your blog content
-index-cli index
-
-# Search indexed content
-index-cli search "machine learning strategy"
+# Or step by step:
+make setup              # Install dependencies and setup environment
+make dev                # Start development server
+make index-test         # Test indexing pipeline
+make index-all          # Index blog content
+make index-search       # Search indexed content
 ```
 
 ## Content Indexing CLI
@@ -918,16 +1138,16 @@ The AI service includes a modern command-line interface for indexing and searchi
 
 ```bash
 # Test the indexing pipeline
-index-cli test
+make index-test
 
 # Index all content
-index-cli index
+make index-all
 
 # Search content
-index-cli search "machine learning strategy"
+make index-search
 
 # View statistics
-index-cli stats
+make index-stats
 ```
 
 ### Installation
@@ -935,17 +1155,25 @@ index-cli stats
 The CLI is automatically available after installing project dependencies:
 
 ```bash
-pip install -e .
+make setup
 ```
 
 ### Available Commands
 
-- **`index-cli test`** - Test pipeline configuration and dependencies
-- **`index-cli index`** - Index blog content with optional category filtering
-- **`index-cli search`** - Semantic search with similarity scoring
-- **`index-cli stats`** - Show indexing statistics and database info
-- **`index-cli clear`** - Clear index data with confirmation prompts
-- **`index-cli config`** - Display current configuration settings
+All indexing commands are available through the Makefile:
+
+- **`make index-test`** - Test pipeline configuration and dependencies
+- **`make index-all`** - Index all blog content
+- **`make index-blog`** - Index only blog category content
+- **`make index-engineering`** - Index only engineering category content
+- **`make index-stats`** - Show indexing statistics and database info
+- **`make index-search`** - Run example semantic search
+- **`make index-search-keyword`** - Run example keyword search
+- **`make index-clear`** - Clear index data with confirmation prompts
+- **`make index-browse`** - Browse indexed data
+- **`make index-sample`** - Show random data samples
+- **`make index-inspect POST=slug`** - Inspect specific post
+- **`make index-help`** - Show indexing CLI help
 
 ### Features
 
@@ -958,20 +1186,23 @@ pip install -e .
 
 ```bash
 # Complete workflow
-index-cli test
-index-cli index
-index-cli search "productivity and learning"
+make index-test
+make index-all
+make index-search
 
 # Category-specific operations
-index-cli index --category blog
-index-cli search "parallel computing" --category engineering
+make index-blog
+make index-engineering
+
+# Inspect specific content
+make index-inspect POST=abstraction
 
 # Development workflow
-index-cli index --category blog --slug abstraction
-index-cli clear --category blog --yes
+make index-clear
+make index-blog
 ```
 
-For detailed usage information, see [CLI_USAGE.md](CLI_USAGE.md).
+For detailed CLI usage information, run `make index-help` or see [CLI_USAGE.md](CLI_USAGE.md).
 
 ## Indexing Package (`src/indexing/`)
 
@@ -981,19 +1212,19 @@ The indexing package provides a complete semantic search solution with dual sear
 
 ```bash
 # Test your setup
-index-cli test
+make index-test
 
 # Index all blog content
-index-cli index
+make index-all
 
 # Semantic search (AI-powered)
-index-cli search "machine learning concepts"
+make index-search
 
-# Keyword search (text matching)
+# Keyword search (text matching) - using CLI directly
 index-cli search "exact phrase" --mode keyword
 
 # View system statistics
-index-cli stats
+make index-stats
 ```
 
 ### Architecture Highlights
