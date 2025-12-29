@@ -1,11 +1,12 @@
 # Makefile for deploying services
 
-.PHONY: deploy deploy-frontend reset-dev add-license help clean
+.PHONY: deploy deploy-all deploy-frontend reset-dev add-license help clean
 
 # Default target
 help:
 	@echo "Available targets:"
 	@echo "  deploy          - Deploy the FFP project"
+	@echo "  deploy-all      - Deploy AI service + Frontend together"
 	@echo "  deploy-frontend - Deploy the frontend web UI service"
 	@echo "  reset-dev       - Reset dev branch from main"
 	@echo "  add-license     - Add license headers to source files"
@@ -23,6 +24,12 @@ deploy:
 	./reset-dev-branch.sh && \
 	echo "🌐 Running deploy-frontend-service.sh..." && \
 	./deploy-frontend-service.sh
+
+# Deploy AI service + Frontend together
+deploy-all:
+	@echo "🚀 Starting full deployment (AI + Frontend)..."
+	@chmod +x scripts/deploy-all.sh
+	@cd scripts && ./deploy-all.sh
 
 # Deploy the frontend web UI service
 deploy-frontend:
