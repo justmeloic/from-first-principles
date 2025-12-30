@@ -48,13 +48,17 @@ log_info "Step 1: Starting AI service with ngrok..."
 cd "$PROJECT_ROOT/services/ai"
 make prod
 
-# Step 2: Wait for ngrok to initialize
+# Step 2: Wait for ngrok to initialize and get URL
 log_info "Step 2: Waiting for ngrok to initialize..."
-sleep 5
 
-# Step 3: Get ngrok URL
-log_info "Step 3: Fetching ngrok URL..."
-NGROK_URL=$(curl -s http://127.0.0.1:4040/api/tunnels | python3 -c "
+MAX_RETRIES=12
+RETRY_DELAY=5
+NGROK_URL=""
+
+for i in $(seq 1 $MAX_RETRIES); do
+    log_info "Attempt $i/$MAX_RETRIES: Checking ngrok API..."
+
+    NGROK_URL=$(curl -s http://127.0.0.1:4040/api/tunnels 2>/dev/null | python3 -c "
 import json, sys
 try:
     data = json.load(sys.stdin)
@@ -67,21 +71,40 @@ except:
     pass
 " 2>/dev/null)
 
+    if [ -n "$NGROK_URL" ]; then
+        break
+    fi
+
+    if [ $i -lt $MAX_RETRIES ]; then
+        log_warn "ngrok not ready yet, waiting ${RETRY_DELAY}s..."
+        sleep $RETRY_DELAY
+    fi
+done
+
 if [ -z "$NGROK_URL" ]; then
-    log_error "Failed to get ngrok URL. Check if ngrok is running."
-    log_warn "You can check ngrok dashboard at: http://localhost:4040"
+    log_error "Failed to get ngrok URL after $MAX_RETRIES attempts."
+    log_warn "Check if ngrok is running: ps aux | grep ngrok"
+    log_warn "Check ngrok logs: cat $PROJECT_ROOT/services/ai/logs/ngrok.log"
+    log_warn "Try ngrok dashboard: http://localhost:4040"
     exit 1
 fi
 
 log_info "Got ngrok URL: $NGROK_URL"
 
-# Step 4: Update netlify.toml
-log_info "Step 4: Updating netlify.toml with new API URL..."
-sed -i '' "s|NEXT_PUBLIC_API_BASE_URL = \".*\"|NEXT_PUBLIC_API_BASE_URL = \"$NGROK_URL\"|" "$NETLIFY_TOML"
+# Step 3: Update netlify.toml
+log_info "Step 3: Updating netlify.toml with new API URL..."
+
+# Handle sed differences between macOS and Linux
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    sed -i '' "s|NEXT_PUBLIC_API_BASE_URL = \".*\"|NEXT_PUBLIC_API_BASE_URL = \"$NGROK_URL\"|" "$NETLIFY_TOML"
+else
+    sed -i "s|NEXT_PUBLIC_API_BASE_URL = \".*\"|NEXT_PUBLIC_API_BASE_URL = \"$NGROK_URL\"|" "$NETLIFY_TOML"
+fi
+
 log_info "Updated $NETLIFY_TOML"
 
-# Step 5: Deploy frontend
-log_info "Step 5: Deploying frontend to Netlify..."
+# Step 4: Deploy frontend
+log_info "Step 4: Deploying frontend to Netlify..."
 cd "$SCRIPT_DIR"
 chmod +x deploy-frontend-service.sh
 ./deploy-frontend-service.sh
