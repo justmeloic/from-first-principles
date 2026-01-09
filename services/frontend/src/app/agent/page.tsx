@@ -57,14 +57,14 @@ export default function AgentPage() {
   const abortControllerRef = useRef<AbortController | null>(null);
 
   // Typewriter animation for greeting
-  const greetingText = "Hello! I'm Loïc's Personal AI Agent";
+  const greetingText = "Hello! I'm an AI Agent";
   const subtitleText =
-    "I'm here to represent Loïc and provide information about his background, expertise, and experience. Feel free to ask about his work in AI, generative models, or anything else!";
+    "I can help you navigate our content, dive deeper into topics, and discover insights from our knowledge base!";
 
   const { displayText: displayGreeting, isComplete: greetingComplete } =
-    useTypewriter(greetingText, 15);
+    useTypewriter(greetingText, 80);
   const { displayText: displaySubtitle, isComplete: subtitleComplete } =
-    useTypewriter(greetingComplete ? subtitleText : "", 20);
+    useTypewriter(greetingComplete ? subtitleText : "", 30);
 
   // Persist and restore chat state
   useEffect(() => {
@@ -331,7 +331,7 @@ export default function AgentPage() {
             >
               {isFirstPrompt && chatHistory.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full space-y-6">
-                  <h1 className="text-5xl md:text-4xl font-open-sans font-[10] tracking-[2px] text-center">
+                  <h1 className="text-5xl md:text-6xl font-open-sans font-[10] tracking-[2px] text-center">
                     <span
                       className={`${
                         theme === "dark" ? "text-white" : "text-zinc-500"

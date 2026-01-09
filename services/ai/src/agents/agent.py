@@ -14,26 +14,26 @@
 
 """Defines the root agent for the application.
 
-This module configures and instantiates Loïc's personal AI agent that
-represents him professionally and provides information about his background,
-expertise, and experience to recruiters and visitors. The agent can use
-Google search to find additional information when needed.
+This module configures and instantiates a general-purpose AI assistant that
+can help users with various queries and tasks using Google search to find
+information when needed. The agent can use either Gemini or Ollama models
+based on the configuration.
 """
 
 from google.adk.agents import Agent
 from google.adk.tools import google_search
 
 from .model_factory import get_pro_model
-from .system_instructions import get_personal_agent_instructions
+from .system_instructions import get_general_assistant_instructions
 
 root_agent = Agent(
-    name='personal_agent',
+    name='general_assistant',
     model=get_pro_model(),
     description=(
-        "Loïc Muhirwa's personal AI agent. I represent Loïc and provide "
-        'accurate information about his background, expertise, and experience '
-        'to recruiters, hiring managers, and visitors.'
+        'A knowledgeable AI assistant for "From First Principles" that can '
+        'help users navigate content, dive deeper into topics, and discover '
+        'insights from the knowledge base using Google search when needed.'
     ),
-    instruction=get_personal_agent_instructions(),
+    instruction=get_general_assistant_instructions(),
     tools=[google_search],
 )
