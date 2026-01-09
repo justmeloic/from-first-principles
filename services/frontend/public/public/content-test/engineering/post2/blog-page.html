@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+     <meta charset="UTF-8" />
+
+
+     <title>From First Principles</title>
+     <link rel="icon" href="../../../assets/images/tab-logo.png" type="image/png">
+
+     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+     <meta name="description" content="" />
+     <meta name="keywords" content="" />
+     <meta name="author" content="Tooplate" />
+     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+
+     <link rel="stylesheet" href="../../../assets/css/bootstrap.min.css" />
+     <link rel="stylesheet" href="../../../assets/css/animate.css" />
+     <link rel="stylesheet" href="../../../assets/css/magnific-popup.css" />
+     <link rel="stylesheet" href="../../../assets/css/font-awesome.min.css" />
+
+     <!-- Main css -->
+     <link rel="stylesheet" href="../../../assets/css/tooplate-style.css" />
+</head>
+
+<body data-spy="scroll" data-target=".navbar-collapse" data-offset="50">
+              <!-- Dark Mode Switch -->
+    <div class="theme-switch-wrapper">
+     <span id="toggle-icon">
+         <span class="toggle-text">Light Mode</span>
+         <i class="fa-solid fa-sun"></i>
+     </span>
+     <label class="theme-switch">
+         <input type="checkbox">
+         <div class="slider round"> </div>
+     </label>
+ </div>
+     <!-- Header -->
+     <div id="header">
+          <!-- Nav -->
+          <nav id="nav">
+               <ul>
+                    <li><a href="../../../index.html">Home</a></li>
+                    <li><a href="../../../pages/blog.html">Blog</a></li>
+                    <li><a href="../../../pages/engineering.html">Engineering</a></li>
+                    <li><a href="../../../index.html#contact">Contact us</a></li>
+                    <li><a href="../../../index.html#newsletter">Newsletter</a></li>
+               </ul>
+          </nav>
+     </div>
+
+
+     <!-- PRE LOADER -->
+     <div class="preloader">
+          <div class="spinner">
+               <span class="spinner-rotate"></span>
+          </div>
+     </div>
+
+     <!-- ABOUT SECTION -->
+     <section id="about" class="parallax-section">
+          <div class="container">
+               <div class="container-article-back">
+                    <a href="../../../pages/engineering.html">
+                         <button class="back-btn">Back</button>
+                    </a>
+               </div>
+               <div class="container-article">
+                    <!-- Simplify toggle -->
+
+                    <!-- Rounded switch -->
+                    <!-- Simplify toggle with a label -->
+                    <div class="toggle-container">
+
+                         <label class="toggle-switch">
+                              <input type="checkbox" id="toggle-simplify">
+                              <span class="slider"></span>
+                         </label>
+                         <span class="toggle-label">Simplify</span>
+                    </div>
+
+                    <div class="centered-title-author">
+                         <h1>Running in Parallel</h1>
+
+                         <p><i>Loïc Muhirwa</i></p>
+                         <p></p>
+                       </div>
+
+                       <br>
+
+
+                    <!-- Paragraph with id and data-file -->
+                    <p id="content-blog-eng-1" data-file="body.md">Loading text...</p>
+
+                    <!-- Pass the id and data-file as parameters -->
+                    <script>
+                         const parameters = {
+                              id: "content-blog-eng-1",
+                              dataFile: document
+                                   .getElementById("content-blog-eng-1")
+                                   .getAttribute("data-file"),
+                         };
+                    </script>
+               </div>
+          </div>
+     </section>
+
+
+     <!-- SCRIPTS -->
+
+     <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+     <script src="../../../assets/js/dynamic-mathjax-content.js"></script>
+     <script src="../../../assets/js/light-dark-mode.js"></script>
+     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+     <script src="../../../assets/js/render-article-text.js"></script>
+     <script src="../../../assets/js/jquery.js"></script>
+     <script src="../../../assets/js/bootstrap.min.js"></script>
+     <script src="../../../assets/js/jquery.parallax.js"></script>
+     <script src="../../../assets/js/jquery.magnific-popup.min.js"></script>
+     <script src="../../../assets/js/magnific-popup-options.js"></script>
+     <script src="../../../assets/js/smoothscroll.js"></script>
+     <script src="../../../assets/js/wow.min.js"></script>
+     <script src="../../../assets/js/custom.js"></script>
+</body>
+
+</html>

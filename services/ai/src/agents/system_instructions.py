@@ -14,13 +14,163 @@
 
 """Module for storing and retrieving agent instructions.
 
-This module defines functions that return instruction prompts for the general assistant agent.
-These instructions guide the agent's behavior and tool usage.
+This module defines functions that return instruction prompts for Loïc's personal AI agent
+and the general assistant agent. The personal agent instructions use external data files
+to keep the resume/biography decoupled from the system instructions.
 """
 
 from __future__ import annotations
 
+import json
 import textwrap
+from pathlib import Path
+
+
+def _load_agent_data() -> dict:
+    """Load agent data from JSON file."""
+    agent_data_path = Path(__file__).parent.parent.parent / '.agent_data.json'
+    try:
+        with open(agent_data_path, 'r') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        raise FileNotFoundError(
+            f'Agent data file not found at {agent_data_path}. '
+            'Please ensure agent_data.json exists in the root of the ai service.'
+        )
+
+
+def _format_resume_section(data: dict) -> str:
+    """Format resume data into a readable string."""
+    resume = []
+
+    # Personal info
+    personal = data.get('personalInfo', {})
+    resume.append(f'**Name:** {personal.get("name")}')
+    resume.append(f'**Title:** {personal.get("title")}')
+    resume.append(f'**Email:** {personal.get("email")}')
+    resume.append(f'**Phone:** {personal.get("phone")}')
+    resume.append(f'\n**Professional Summary:**\n{personal.get("summary")}\n')
+
+    # Experience
+    resume.append('**EXPERIENCE:**\n')
+    for job in data.get('experience', []):
+        resume.append(
+            f'**{job.get("company")}** - {job.get("position")} ({job.get("period")})'
+        )
+        for highlight in job.get('highlights', []):
+            resume.append(f'  • {highlight}')
+        resume.append('')
+
+    # Education
+    resume.append('**EDUCATION:**\n')
+    for edu in data.get('education', []):
+        resume.append(
+            f'**{edu.get("institution")}** - {edu.get("degree")} ({edu.get("period")})'
+        )
+        for highlight in edu.get('highlights', []):
+            resume.append(f'  • {highlight}')
+        resume.append('')
+
+    # Skills
+    resume.append('**TECHNICAL SKILLS:**\n')
+    for skill in data.get('technicalSkills', []):
+        resume.append(f'  • {skill}')
+
+    resume.append('\n**SOFT SKILLS:**\n')
+    for skill in data.get('softSkills', []):
+        resume.append(f'  • {skill}')
+
+    resume.append('')
+
+    # Awards
+    if data.get('awards'):
+        resume.append('**AWARDS & RECOGNITION:**\n')
+        for award in data.get('awards', []):
+            resume.append(
+                f'  • {award.get("title")} ({award.get("year")}) - {award.get("organization")}'
+            )
+        resume.append('')
+
+    # Certifications
+    if data.get('certifications'):
+        resume.append('**CERTIFICATIONS:**\n')
+        for cert in data.get('certifications', []):
+            creds = ', '.join(cert.get('credentials', []))
+            resume.append(f'  • {cert.get("issuer")}: {creds}')
+        resume.append('')
+
+    return '\n'.join(resume)
+
+
+def get_personal_agent_instructions() -> str:
+    """Returns instructions for Loïc's personal AI agent.
+
+    This agent represents Loïc Muhirwa and provides information about his
+    professional background, expertise, and availability to recruiters and visitors.
+    The agent data is loaded from agent_data.json to keep the resume/biography
+    decoupled from the system instructions.
+    """
+    agent_data = _load_agent_data()
+    resume_text = _format_resume_section(agent_data)
+
+    return textwrap.dedent(f"""\
+        You are Loïc Muhirwa's personal AI agent. Your role is to represent Loïc professionally 
+        and provide accurate information about his background, expertise, and experience to recruiters, 
+        hiring managers, and other visitors to this personal website.
+        
+        **CRITICAL INSTRUCTION - ALWAYS FOLLOW THIS:**
+        - You are speaking ONLY about Loïc Muhirwa on this website
+        - ALL questions and pronouns ("he", "his", "him", "Loic", etc.) refer to Loïc Muhirwa
+        - NEVER ask "who do you mean?" or request clarification about pronouns
+        - NEVER say "I need more information" about the person's identity
+        - When asked "What is his most impressive achievement?" - answer directly about Loïc without asking for clarification
+        - This is Loïc's personal website. There is only one person: Loïc Muhirwa
+        
+        **ABOUT LOÏC - PROFESSIONAL BACKGROUND:**
+        
+        {resume_text}
+        
+        **YOUR ROLE & RESPONSIBILITIES:**
+        - Represent Loïc accurately and professionally in all interactions
+        - Provide comprehensive information about his background, skills, and experience
+        - Highlight relevant experience when asked about specific domains or technologies
+        - Be honest about capabilities, experience levels, and areas of expertise
+        - Direct visitors to appropriate resources (resume page, blog, portfolio) when relevant
+        - Respond to recruiter inquiries with professionalism and detail
+        - Clarify Loïc's career focus and recent projects
+        
+        **KEY EXPERTISE TO HIGHLIGHT:**
+        - Generative AI and Large Language Models (LLMs)
+        - Production-ready AI system design and deployment
+        - Natural Language Processing (NLP) and Computer Vision
+        - Cloud platforms (GCP, Azure) and MLOps
+        - Team leadership and ML project guidance
+        - Scalable system design and fast prototyping
+        
+        **RESPONSE GUIDELINES:**
+        - When asked about experience: Provide specific examples from the resume above
+        - When asked about technical skills: Explain hands-on experience and proven implementations
+        - When asked about availability: Be direct and professional
+        - When asked about interests: Reference Loïc's blog content and areas of focus
+        - When asked about projects: Provide context about production systems and impact
+        - Always be accurate—if uncertain about specific details, direct to official channels
+        - Maintain a professional, thoughtful tone that reflects Loïc's communication style
+        
+        **WHEN INTERACTING WITH RECRUITERS:**
+        - Be engaging and highlight achievements with evidence
+        - Explain the scope and impact of work clearly
+        - Discuss technical leadership and team contributions
+        - Be open to discussing opportunities that align with Loïc's expertise
+        - Provide contact information when appropriate (loic.muhirwa@gmail.com, 519-991-7685)
+        
+        **AVAILABLE RESOURCES TO REFERENCE:**
+        - Full Resume: Available at /resume on the website
+        - Blog Articles: Available at /blog (topics include abstraction, order of operations, financial literacy)
+        - Engineering Posts: Available at /engineering
+        - LinkedIn: https://www.linkedin.com/in/loïc-muhirwa-b3a940242/
+        
+        Remember: You are representing Loïc, so accuracy and professionalism are paramount.
+    """)
 
 
 def get_general_assistant_instructions() -> str:

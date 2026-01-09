@@ -21,32 +21,46 @@ export function NavBar() {
 
   const NavLinks = () => (
     <>
+      {false && (
+        <>
+          <Link
+            href="/"
+            className={` md:text-[13px] text-[20px] transition-colors md:hover:text-accent hover:text-accent ${
+              theme === "dark" ? "text-gray-300" : "text-gray-800"
+            } md:py-0 py-6`}
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            Home
+          </Link>
+          <Link
+            href="/blog"
+            className={` md:text-[13px] text-[20px] transition-colors md:hover:text-accent hover:text-accent ${
+              theme === "dark" ? "text-gray-300" : "text-gray-800"
+            } md:py-0 py-6`}
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            Blog
+          </Link>
+          <Link
+            href="/engineering"
+            className={`md:text-[13px] text-[20px] transition-colors md:hover:text-accent hover:text-accent ${
+              theme === "dark" ? "text-gray-300" : "text-gray-800"
+            } md:py-0 py-6`}
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            Engineering
+          </Link>
+        </>
+      )}
+
       <Link
-        href="/"
-        className={` md:text-[13px] text-[20px] transition-colors md:hover:text-accent hover:text-accent ${
-          theme === "dark" ? "text-gray-300" : "text-gray-800"
-        } md:py-0 py-6`}
-        onClick={() => setIsMobileMenuOpen(false)}
-      >
-        Home
-      </Link>
-      <Link
-        href="/blog"
-        className={` md:text-[13px] text-[20px] transition-colors md:hover:text-accent hover:text-accent ${
-          theme === "dark" ? "text-gray-300" : "text-gray-800"
-        } md:py-0 py-6`}
-        onClick={() => setIsMobileMenuOpen(false)}
-      >
-        Blog
-      </Link>
-      <Link
-        href="/engineering"
+        href="/resume"
         className={`md:text-[13px] text-[20px] transition-colors md:hover:text-accent hover:text-accent ${
           theme === "dark" ? "text-gray-300" : "text-gray-800"
         } md:py-0 py-6`}
         onClick={() => setIsMobileMenuOpen(false)}
       >
-        Engineering
+        Resume
       </Link>
 
       <Link
@@ -58,60 +72,41 @@ export function NavBar() {
       >
         Agent
       </Link>
-      <Link
-        href="/search"
-        className={`md:text-[13px] text-[20px] transition-colors md:hover:text-accent hover:text-accent ${
-          theme === "dark" ? "text-gray-300" : "text-gray-800"
-        } md:py-0 py-6`}
-        onClick={() => setIsMobileMenuOpen(false)}
-      >
-        Search
-      </Link>
-      {isHomePage ? (
-        <button
-          onClick={() => {
-            scrollToSection("contact");
-            setIsMobileMenuOpen(false);
-          }}
-          className={`md:text-[13px] text-[20px] transition-colors md:hover:text-accent hover:text-accent ${
-            theme === "dark" ? "text-gray-300" : "text-gray-800"
-          } md:py-0 py-6`}
-        >
-          Contact
-        </button>
-      ) : (
-        <Link
-          href="/#contact"
-          className={` md:text-[13px] text-[20px] transition-colors md:hover:text-accent hover:text-accent ${
-            theme === "dark" ? "text-gray-300" : "text-gray-800"
-          } md:py-0 py-6`}
-          onClick={() => setIsMobileMenuOpen(false)}
-        >
-          Contact
-        </Link>
-      )}
-      {isHomePage ? (
-        <button
-          onClick={() => {
-            scrollToSection("newsletter");
-            setIsMobileMenuOpen(false);
-          }}
-          className={` md:text-[13px] text-[20px] transition-colors md:hover:text-accent hover:text-accent ${
-            theme === "dark" ? "text-gray-300" : "text-gray-800"
-          } md:py-0 py-6`}
-        >
-          Newsletter
-        </button>
-      ) : (
-        <Link
-          href="/#newsletter"
-          className={` md:text-[13px] text-[20px] transition-colors md:hover:text-accent hover:text-accent ${
-            theme === "dark" ? "text-gray-300" : "text-gray-800"
-          } md:py-0 py-6`}
-          onClick={() => setIsMobileMenuOpen(false)}
-        >
-          Newsletter
-        </Link>
+      {false && (
+        <>
+          <Link
+            href="/search"
+            className={`md:text-[13px] text-[20px] transition-colors md:hover:text-accent hover:text-accent ${
+              theme === "dark" ? "text-gray-300" : "text-gray-800"
+            } md:py-0 py-6`}
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            Search
+          </Link>
+          {isHomePage ? (
+            <button
+              onClick={() => {
+                scrollToSection("contact");
+                setIsMobileMenuOpen(false);
+              }}
+              className={`md:text-[13px] text-[20px] transition-colors md:hover:text-accent hover:text-accent ${
+                theme === "dark" ? "text-gray-300" : "text-gray-800"
+              } md:py-0 py-6`}
+            >
+              Contact
+            </button>
+          ) : (
+            <Link
+              href="/#contact"
+              className={` md:text-[13px] text-[20px] transition-colors md:hover:text-accent hover:text-accent ${
+                theme === "dark" ? "text-gray-300" : "text-gray-800"
+              } md:py-0 py-6`}
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Contact
+            </Link>
+          )}
+        </>
       )}
     </>
   );

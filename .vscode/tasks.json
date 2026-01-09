@@ -1,0 +1,44 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "shell",
+			"label": "dev: ai",
+			"command": "lsof -ti:8081 | xargs kill -9 2>/dev/null || true; cd services/ai && make dev",
+			"presentation": {
+				"echo": false,
+				"group": "dev",
+				"showReuseMessage": false,
+				"close": false,
+				"reveal": "always",
+				"panel": "shared"
+			},
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"type": "shell",
+			"label": "dev: frontend",
+			"command": "lsof -ti:3000 | xargs kill -9 2>/dev/null || true; cd services/frontend && make dev",
+			"presentation": {
+				"echo": false,
+				"group": "dev",
+				"showReuseMessage": false,
+				"close": false,
+				"reveal": "always",
+				"panel": "shared"
+			},
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "dev",
+			"dependsOrder": "parallel",
+			"dependsOn": ["dev: ai", "dev: frontend"],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		}
+	]
+}

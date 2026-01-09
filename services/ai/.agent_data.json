@@ -1,0 +1,100 @@
+{
+  "personalInfo": {
+    "name": "Loïc Muhirwa",
+    "title": "AI Applied Scientist & Engineer",
+    "email": "loic.muhirwa@gmail.com",
+    "phone": "519-991-7685",
+    "summary": "AI & ML Applied Scientist & Engineer with 8+ years of experience in the field. Proven ability to design, develop, and deploy innovative AI solutions that leverage cutting-edge technologies, with a strong emphasis on scalable system design, fast prototyping, implementation, deployment, and maintenance of large-scale production AI systems. Expertise in generative AI, large language models (LLM), natural language processing (NLP) and computer vision."
+  },
+  "experience": [
+    {
+      "company": "Google",
+      "position": "Generative AI Engineer",
+      "period": "March 2024 – Present",
+      "highlights": [
+        "Designed and developed innovative production-ready applications leveraging multimodal models, Retrieval Augmented Generation, long context understanding, reasoning engines, and agentic workflows.",
+        "Owned the implementation, deployment, and maintenance of large-scale AI systems in production environment.",
+        "Provided technical leadership on Google Cloud Platform (GCP) solutions with focus on Vertex AI and generative AI technologies."
+      ]
+    },
+    {
+      "company": "Bell Canada - Artificial Intelligence",
+      "position": "LLM AI Engineer",
+      "period": "July 2023 – March 2024",
+      "highlights": [
+        "Implemented, fine-tuned, and deployed state-of-the-art LLMs in GCP cloud-based production environment.",
+        "Owned end-to-end process of deploying and maintaining LLMs leveraging Kubernetes for container orchestration.",
+        "Utilized Huggingface, LangChain, RAG, and PEFT to improve LLM performance in production."
+      ]
+    },
+    {
+      "company": "Statistics Canada - Data Science & Innovation Division",
+      "position": "Staff Machine Learning Engineer",
+      "period": "May 2022 – Sabbatical since July 2023",
+      "highlights": [
+        "Led team of Senior Data Scientists and Senior Data Engineers focused on AI research and development.",
+        "Directed overhaul of AI research and solutions addressing Government agencies' complex challenges.",
+        "Established best practices for containerization with Docker and scalable deployment using Kubernetes."
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "University of Ottawa",
+      "degree": "M.Sc. in Mathematics and Statistics with Thesis",
+      "period": "2018 – 2022",
+      "highlights": [
+        "Thesis: A Generative Approach to Simultaneous Diffeomorphic Registration and Lesion Segmentation of Neuroimages",
+        "Achieved A+ in every course"
+      ]
+    },
+    {
+      "institution": "University of Windsor",
+      "degree": "B.App.Sc. Honours in Mathematics and Statistics",
+      "period": "2012 – 2017",
+      "highlights": [
+        "Minors in Biology and Chemistry",
+        "Dean's Honour Roll for outstanding academic performance"
+      ]
+    }
+  ],
+  "technicalSkills": [
+    "Generative AI (5+ years)",
+    "Large Language Models & NLP (5+ years)",
+    "Computer Vision and Image Processing",
+    "Statistical Modeling (8+ years)",
+    "Responsible ML and Peer Review (3+ years)",
+    "Cloud Computing (GCP, Azure)",
+    "Python, PyTorch, Huggingface, LangChain",
+    "Docker, Kubernetes",
+    "Google Cloud Platform (Vertex AI)"
+  ],
+  "softSkills": [
+    "Management/Supervision (4+ years)",
+    "Communication & Presentation (6+ years)",
+    "Leadership & Capacity Building",
+    "Team mentoring and development"
+  ],
+  "awards": [
+    {
+      "title": "Agatha Chapman Innovation Award",
+      "organization": "Statistics Canada, Data Science & Innovation Division",
+      "year": 2021
+    },
+    {
+      "title": "Performance Recognition Award",
+      "organization": "Statistics Canada, Economics Statistics Methods Division",
+      "year": 2020
+    }
+  ],
+  "certifications": [
+    {
+      "issuer": "Society of Actuaries",
+      "credentials": ["Probability (P)", "Financial Mathematics (FM)", "Models for Financial Economics (MFE)"]
+    },
+    {
+      "issuer": "Google",
+      "credentials": ["Professional Machine Learning Engineer (PMLE)"]
+    }
+  ]
+}
