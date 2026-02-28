@@ -136,6 +136,7 @@ class Settings(BaseSettings):
 
     # Rate limiting
     AGENT_RATE_LIMIT: str = '10/minute'
+    GLOBAL_AGENT_RATE_LIMIT: str = '1000/day'
 
     # Development settings
     RESTART_SCRIPT_PATH: str = './scripts/restart-server.sh'

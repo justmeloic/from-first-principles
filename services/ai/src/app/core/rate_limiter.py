@@ -14,10 +14,9 @@
 
 """Rate limiting configuration for API endpoints.
 
-Uses slowapi to provide per-session rate limiting on expensive endpoints
-(e.g., agent queries that call LLM APIs). The limiter keys on the
-X-Session-ID header, falling back to client IP when the header is absent.
-"""
+Uses slowapi to provide per-session and global rate limiting on expensive
+endpoints (e.g., agent queries that call LLM APIs). The limiter keys on the
+X-Session-ID header, falling back to client IP when the header is absent."""
 
 from slowapi import Limiter
 from slowapi.util import get_remote_address
@@ -34,6 +33,12 @@ def _get_session_or_ip(request: Request) -> str:
     return get_remote_address(request)
 
 
+def _global_key(request: Request) -> str:
+    """Return a fixed key so all requests share one global bucket."""
+    return 'global'
+
+
 limiter = Limiter(key_func=_get_session_or_ip)
 
 AGENT_RATE_LIMIT: str = settings.AGENT_RATE_LIMIT
+GLOBAL_AGENT_RATE_LIMIT: str = settings.GLOBAL_AGENT_RATE_LIMIT

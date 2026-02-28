@@ -38,7 +38,12 @@ from loguru import logger as _logger
 
 from src.agents.agent_factory import agent_factory
 from src.app.artifacts.file_validator import FileValidator
-from src.app.core.rate_limiter import AGENT_RATE_LIMIT, limiter
+from src.app.core.rate_limiter import (
+    AGENT_RATE_LIMIT,
+    GLOBAL_AGENT_RATE_LIMIT,
+    _global_key,
+    limiter,
+)
 from src.app.models import AgentConfig
 from src.app.schemas import AgentResponse, Query
 from src.app.services.agent_service import agent_service
@@ -111,6 +116,7 @@ async def get_available_models():
 
 @router.post('/', response_model=AgentResponse)
 @limiter.limit(AGENT_RATE_LIMIT)
+@limiter.limit(GLOBAL_AGENT_RATE_LIMIT, key_func=_global_key)
 async def agent_endpoint(
     request: Request,
     response: Response,
