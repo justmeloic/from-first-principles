@@ -134,6 +134,9 @@ class Settings(BaseSettings):
         },
     }
 
+    # Rate limiting
+    AGENT_RATE_LIMIT: str = '10/minute'
+
     # Development settings
     RESTART_SCRIPT_PATH: str = './scripts/restart-server.sh'
 
