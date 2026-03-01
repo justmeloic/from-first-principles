@@ -21,6 +21,12 @@ import { MessageResponse, ModelsResponse, SearchHealth, SearchQuery, SearchRespo
 // to use relative paths for API requests.
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
 
+// Common headers to include in all API requests.
+// 'ngrok-skip-browser-warning' bypasses the ngrok free-tier interstitial page.
+const COMMON_HEADERS: Record<string, string> = {
+  'ngrok-skip-browser-warning': 'true',
+};
+
 export interface SendMessageOptions {
   model?: string;
   signal?: AbortSignal;
@@ -52,6 +58,7 @@ export const sendMessage = async (
     const response = await fetch(`${BASE_URL}/api/v1/root_agent/`, {
       method: 'POST',
       headers: {
+        ...COMMON_HEADERS,
         'X-Session-ID': storedSessionId || '', // Don't set Content-Type for FormData
       },
       body: formData,
@@ -91,6 +98,7 @@ export const getAvailableModels = async (): Promise<ModelsResponse> => {
     const response = await fetch(`${BASE_URL}/api/v1/root_agent/models`, {
       method: 'GET',
       headers: {
+        ...COMMON_HEADERS,
         'Content-Type': 'application/json',
       },
     });
@@ -124,6 +132,7 @@ export const login = async (secret: string, name: string) => {
   const response = await fetch(`${BASE_URL}/api/v1/auth/login`, {
     method: 'POST',
     headers: {
+      ...COMMON_HEADERS,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ secret, name }),
@@ -147,6 +156,7 @@ export const logout = async () => {
   const response = await fetch(`${BASE_URL}/api/v1/auth/logout`, {
     method: 'POST',
     headers: {
+      ...COMMON_HEADERS,
       'Content-Type': 'application/json',
       'X-Session-ID': storedSessionId || '',
     },
@@ -173,6 +183,7 @@ export const searchContent = async (
     const response = await fetch(`${BASE_URL}/api/v1/search/`, {
       method: 'POST',
       headers: {
+        ...COMMON_HEADERS,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(searchQuery),
@@ -195,6 +206,7 @@ export const getSearchStats = async (): Promise<SearchStats> => {
     const response = await fetch(`${BASE_URL}/api/v1/search/stats`, {
       method: 'GET',
       headers: {
+        ...COMMON_HEADERS,
         'Content-Type': 'application/json',
       },
     });
@@ -215,6 +227,7 @@ export const getSearchHealth = async (): Promise<SearchHealth> => {
     const response = await fetch(`${BASE_URL}/api/v1/search/health`, {
       method: 'GET',
       headers: {
+        ...COMMON_HEADERS,
         'Content-Type': 'application/json',
       },
     });
