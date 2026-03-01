@@ -35,23 +35,33 @@ def client():
 
 
 @pytest.fixture
+def error_client():
+    """Test client that returns error responses instead of raising exceptions."""
+    return TestClient(app, raise_server_exceptions=False)
+
+
+@pytest.fixture
 def mock_search_response():
-    """Create a mock search response."""
+    """Create a mock search response matching SearchResponse schema."""
     return {
+        'query': {'query': 'test search query', 'search_type': 'semantic', 'limit': 10},
         'results': [
             {
-                'id': 'test-1',
                 'title': 'Test Blog Post',
-                'content': 'This is a test blog post about testing.',
                 'category': 'blog',
-                'similarity_score': 0.85,
+                'slug': 'test-blog-post',
+                'excerpt': 'This is a test blog post about testing.',
+                'content': 'This is a test blog post about testing.',
+                'score': 0.85,
+                'url': '/blog/test-blog-post',
+                'publish_date': '2025-08-22',
+                'tags': ['testing'],
                 'metadata': {'author': 'Test Author', 'date': '2025-08-22'},
             }
         ],
         'total_results': 1,
-        'query_type': 'semantic',
-        'processing_time': 0.123,
-        'metadata': {'embedding_model': 'test-model', 'index_version': '1.0'},
+        'search_time_ms': 123.0,
+        'metadata': {'search_type': 'semantic', 'embedding_model': 'test-model'},
     }
 
 
@@ -97,7 +107,8 @@ class TestSearchEndpoints:
     @patch('src.app.services.search_service.search_service.search_content')
     def test_search_content_keyword(self, mock_search, client, mock_search_response):
         """Test keyword search functionality."""
-        mock_search_response['query_type'] = 'keyword'
+        mock_search_response['metadata']['search_type'] = 'keyword'
+        mock_search_response['query']['search_type'] = 'keyword'
         mock_search.return_value = mock_search_response
 
         search_data = {
@@ -111,7 +122,7 @@ class TestSearchEndpoints:
         assert response.status_code == 200
 
         data = response.json()
-        assert data['query_type'] == 'keyword'
+        assert data['metadata']['search_type'] == 'keyword'
 
     @patch('src.app.services.search_service.search_service.search_content')
     def test_search_content_with_category_filter(
@@ -186,13 +197,13 @@ class TestSearchEndpoints:
         assert data['database_connected'] is True
 
     @patch('src.app.services.search_service.search_service.health_check')
-    def test_search_health_check_unhealthy(self, mock_health, client):
+    def test_search_health_check_unhealthy(self, mock_health, error_client):
         """Test search health check when service is unhealthy."""
         mock_health.side_effect = Exception('Search service unavailable')
 
-        response = client.get('/api/v1/search/health')
-        # The actual status code depends on error handling implementation
-        assert response.status_code in [500, 503]
+        response = error_client.get('/api/v1/search/health')
+        # Unhandled exception in route returns 500 via ServerErrorMiddleware
+        assert response.status_code == 500
 
 
 class TestSearchValidation:
@@ -237,7 +248,7 @@ class TestSearchServiceErrors:
     """Test class for search service error handling."""
 
     @patch('src.app.services.search_service.search_service.search_content')
-    def test_search_service_timeout(self, mock_search, client):
+    def test_search_service_timeout(self, mock_search, error_client):
         """Test handling of search service timeout."""
         mock_search.side_effect = TimeoutError('Search service timeout')
 
@@ -247,12 +258,12 @@ class TestSearchServiceErrors:
             'limit': 10,
         }
 
-        response = client.post('/api/v1/search/', json=search_data)
-        # Should handle timeout gracefully
-        assert response.status_code in [408, 500, 503]
+        response = error_client.post('/api/v1/search/', json=search_data)
+        # Unhandled exception in route returns 500 via ServerErrorMiddleware
+        assert response.status_code == 500
 
     @patch('src.app.services.search_service.search_service.search_content')
-    def test_search_service_internal_error(self, mock_search, client):
+    def test_search_service_internal_error(self, mock_search, error_client):
         """Test handling of search service internal errors."""
         mock_search.side_effect = Exception('Internal search error')
 
@@ -262,17 +273,17 @@ class TestSearchServiceErrors:
             'limit': 10,
         }
 
-        response = client.post('/api/v1/search/', json=search_data)
-        # Should handle internal errors gracefully
-        assert response.status_code in [500, 503]
+        response = error_client.post('/api/v1/search/', json=search_data)
+        # Unhandled exception in route returns 500 via ServerErrorMiddleware
+        assert response.status_code == 500
 
     @patch('src.app.services.search_service.search_service.get_search_stats')
-    def test_stats_service_error(self, mock_stats, client):
+    def test_stats_service_error(self, mock_stats, error_client):
         """Test handling of stats service errors."""
         mock_stats.side_effect = Exception('Stats service error')
 
-        response = client.get('/api/v1/search/stats')
-        assert response.status_code in [500, 503]
+        response = error_client.get('/api/v1/search/stats')
+        assert response.status_code == 500
 
 
 if __name__ == '__main__':

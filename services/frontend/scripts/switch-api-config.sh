@@ -8,22 +8,7 @@ set -e
 
 ENV_FILE="/home/justloic/companies/from-first-principles/codebase/services/frontend/.env.local"
 LOCAL_URL="http://localhost:8081"
-NGROK_URL_PLACEHOLDER="NGROK_URL_HERE"
-
-# Get current ngrok URL
-get_ngrok_url() {
-    curl -s http://127.0.0.1:4040/api/tunnels 2>/dev/null | python3 -c "
-import json, sys
-try:
-    data = json.load(sys.stdin)
-    for tunnel in data.get('tunnels', []):
-        if 'localhost:8080' in tunnel.get('config', {}).get('addr', ''):
-            print(tunnel['public_url'])
-            break
-except:
-    pass
-" || echo ""
-}
+NGROK_URL="https://elenor-sleekiest-funereally.ngrok-free.dev"
 
 update_env_file() {
     local new_url="$1"
@@ -43,23 +28,16 @@ case "${1:-}" in
         echo "   Make sure your AI service is running on $LOCAL_URL"
         ;;
     "ngrok")
-        CURRENT_NGROK_URL=$(get_ngrok_url)
-        if [ -z "$CURRENT_NGROK_URL" ]; then
-            echo "❌ No ngrok tunnel found running on port 8080"
-            echo "   Start ngrok first: ngrok http 8080"
-            exit 1
-        fi
-        update_env_file "$CURRENT_NGROK_URL" "API Configuration - Using ngrok tunnel"
+        update_env_file "$NGROK_URL" "API Configuration - Using ngrok tunnel (static domain)"
         echo "🌐 Switched to ngrok mode"
-        echo "   Public URL: $CURRENT_NGROK_URL"
-        echo "   Monitor at: http://127.0.0.1:4040"
+        echo "   Public URL: $NGROK_URL"
         ;;
     *)
         echo "Usage: $0 [local|ngrok]"
         echo ""
         echo "Commands:"
         echo "  local  - Switch to local development (http://localhost:8081)"
-        echo "  ngrok  - Switch to ngrok tunnel (auto-detects current URL)"
+        echo "  ngrok  - Switch to ngrok static domain ($NGROK_URL)"
         echo ""
         echo "Current configuration:"
         grep "NEXT_PUBLIC_API_BASE_URL=" "$ENV_FILE" | head -1

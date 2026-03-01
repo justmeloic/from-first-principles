@@ -52,10 +52,10 @@ fi
 if [ "$1" = "stop" ]; then
     print_banner
     log_info "Stopping all services..."
-    
+
     # Create logs directory
     mkdir -p "$LOG_DIR"
-    
+
     # Stop services (inline for stop command)
     if [ -f "$SERVER_PID_FILE" ]; then
         server_pid=$(cat "$SERVER_PID_FILE")
@@ -85,14 +85,14 @@ if [ "$1" = "stop" ]; then
     # Kill any remaining processes
     pkill -f "uvicorn.*src.app.main:app" 2>/dev/null || true
     pkill -f "ngrok.*http.*$PORT" 2>/dev/null || true
-    
+
     # Kill any process using our port
     port_pid=$(lsof -ti:$PORT 2>/dev/null || true)
     if [ -n "$port_pid" ]; then
         log_info "Killing process using port $PORT (PID: $port_pid)"
         kill -9 $port_pid 2>/dev/null || true
     fi
-    
+
     log_info "All services stopped"
     exit 0
 fi
@@ -134,14 +134,14 @@ stop_services() {
     # Kill any remaining processes by name and port
     pkill -f "uvicorn.*src.app.main:app" 2>/dev/null || true
     pkill -f "ngrok.*http.*$PORT" 2>/dev/null || true
-    
+
     # Kill any process using our port
     local port_pid=$(lsof -ti:$PORT 2>/dev/null || true)
     if [ -n "$port_pid" ]; then
         log_info "Killing process using port $PORT (PID: $port_pid)"
         kill -9 $port_pid 2>/dev/null || true
     fi
-    
+
     # Wait a moment for ports to be released
     sleep 2
 }
@@ -189,9 +189,10 @@ else
     exit 1
 fi
 
-# Start ngrok in background
-log_info "Starting ngrok tunnel for port $PORT"
-nohup ngrok http $PORT > "$LOG_DIR/ngrok.log" 2>&1 &
+# Start ngrok in background with static domain
+NGROK_DOMAIN="elenor-sleekiest-funereally.ngrok-free.dev"
+log_info "Starting ngrok tunnel for port $PORT (domain: $NGROK_DOMAIN)"
+nohup ngrok http $PORT --domain=$NGROK_DOMAIN > "$LOG_DIR/ngrok.log" 2>&1 &
 NGROK_PID=$!
 echo $NGROK_PID > "$NGROK_PID_FILE"
 
@@ -210,7 +211,7 @@ log_info "Deployment completed!"
 echo
 echo -e "${GREEN}Services started:${NC}"
 echo -e "  • FastAPI server running on http://localhost:$PORT (PID: $SERVER_PID)"
-echo -e "  • ngrok tunnel forwarding to port $PORT (PID: $NGROK_PID)"
+echo -e "  • ngrok tunnel: ${GREEN}https://$NGROK_DOMAIN${NC} (PID: $NGROK_PID)"
 echo
 echo -e "${YELLOW}Log files:${NC}"
 echo -e "  • Server logs: ${GREEN}$LOG_DIR/server.log${NC}"

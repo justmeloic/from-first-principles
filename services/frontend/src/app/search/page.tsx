@@ -19,10 +19,12 @@
 import { SearchBar } from "@/components/Search/SearchBar";
 import { SearchFilters } from "@/components/Search/SearchFilters";
 import { SearchResults } from "@/components/Search/SearchResults";
+import { ServiceUnavailable } from "@/components/ServiceUnavailable";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/toaster";
+import { useServiceHealth } from "@/hooks/use-service-health";
 import { useToast } from "@/hooks/use-toast";
-import { searchContent } from "@/lib/api";
+import { getSearchHealth, searchContent } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { SearchQuery, SearchResponse, SearchResult } from "@/types";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -51,6 +53,7 @@ export default function SearchPage() {
 
   const abortController = useRef<AbortController | null>(null);
   const { toast } = useToast();
+  const { status: serviceStatus } = useServiceHealth(getSearchHealth);
 
   // Persist and restore search state
   useEffect(() => {
@@ -62,7 +65,7 @@ export default function SearchPage() {
     const storedLimit = localStorage.getItem("searchLimit");
     const storedCategoryFilter = localStorage.getItem("searchCategoryFilter");
     const storedSimilarityThreshold = localStorage.getItem(
-      "searchSimilarityThreshold"
+      "searchSimilarityThreshold",
     );
     const storedCaseSensitive = localStorage.getItem("searchCaseSensitive");
     const storedShowFilters = localStorage.getItem("searchShowFilters");
@@ -155,7 +158,7 @@ export default function SearchPage() {
   useEffect(() => {
     localStorage.setItem(
       "searchSimilarityThreshold",
-      similarityThreshold.toString()
+      similarityThreshold.toString(),
     );
   }, [similarityThreshold]);
 
@@ -283,106 +286,112 @@ export default function SearchPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black">
-      {/* Clear Search Button - fixed position in top left corner */}
-      {(results.length > 0 || query.trim()) && (
-        <div className="fixed top-24 left-4 z-10">
-          <Button
-            onClick={clearSearch}
-            size="sm"
-            className="rounded-full w-10 h-10 p-0 bg-white dark:bg-dark-mode-gray-secondary-bg text-accent dark:text-white/30 hover:text-white dark:hover:text-white hover:bg-accent dark:hover:bg-accent/50 flex items-center justify-center shadow-md hover:shadow-lg transition-all duration-200 border-0"
-            title="Reset Search"
-            disabled={isClearing}
-          >
-            <svg
-              className={`w-5 h-5 transition-transform duration-600 ease-in-out ${
-                isClearing ? "animate-spin" : ""
-              }`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-              />
-            </svg>
-          </Button>
-        </div>
-      )}
+      {serviceStatus === "unavailable" ? (
+        <ServiceUnavailable serviceName="Search" />
+      ) : (
+        <>
+          {/* Clear Search Button - fixed position in top left corner */}
+          {(results.length > 0 || query.trim()) && (
+            <div className="fixed top-24 left-4 z-10">
+              <Button
+                onClick={clearSearch}
+                size="sm"
+                className="rounded-full w-10 h-10 p-0 bg-white dark:bg-dark-mode-gray-secondary-bg text-accent dark:text-white/30 hover:text-white dark:hover:text-white hover:bg-accent dark:hover:bg-accent/50 flex items-center justify-center shadow-md hover:shadow-lg transition-all duration-200 border-0"
+                title="Reset Search"
+                disabled={isClearing}
+              >
+                <svg
+                  className={`w-5 h-5 transition-transform duration-600 ease-in-out ${
+                    isClearing ? "animate-spin" : ""
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+              </Button>
+            </div>
+          )}
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          {/* Dynamic layout based on whether we have results */}
-          <div
-            className={cn(
-              "transition-all duration-1000 ease-in-out transform-gpu",
-              results.length > 0 || isLoading
-                ? "mt-28" // Slightly lower position when results are shown
-                : "mt-32 md:mt-48" // Centered position when no results
-            )}
-          >
-            {/* Search Bar Container with centering */}
-            <div
-              className={cn(
-                "transition-all duration-1000 ease-in-out transform-gpu",
-                results.length === 0 && !isLoading
-                  ? "flex items-center justify-center min-h-[40vh]" // Center vertically when no results
-                  : "" // Normal flow when results exist
-              )}
-            >
-              <div className="w-full space-y-6">
-                {/* Search Bar */}
-                <SearchBar
-                  query={query}
-                  onQueryChange={setQuery}
-                  onSearch={handleSearch}
-                  onClearSearch={clearSearch}
-                  onToggleFilters={toggleFilters}
-                  isLoading={isLoading}
-                  showFilters={showFilters}
-                  hasResults={results.length > 0}
-                />
+          <div className="container mx-auto px-4 py-8">
+            <div className="max-w-4xl mx-auto">
+              {/* Dynamic layout based on whether we have results */}
+              <div
+                className={cn(
+                  "transition-all duration-1000 ease-in-out transform-gpu",
+                  results.length > 0 || isLoading
+                    ? "mt-28" // Slightly lower position when results are shown
+                    : "mt-32 md:mt-48", // Centered position when no results
+                )}
+              >
+                {/* Search Bar Container with centering */}
+                <div
+                  className={cn(
+                    "transition-all duration-1000 ease-in-out transform-gpu",
+                    results.length === 0 && !isLoading
+                      ? "flex items-center justify-center min-h-[40vh]" // Center vertically when no results
+                      : "", // Normal flow when results exist
+                  )}
+                >
+                  <div className="w-full space-y-6">
+                    {/* Search Bar */}
+                    <SearchBar
+                      query={query}
+                      onQueryChange={setQuery}
+                      onSearch={handleSearch}
+                      onClearSearch={clearSearch}
+                      onToggleFilters={toggleFilters}
+                      isLoading={isLoading}
+                      showFilters={showFilters}
+                      hasResults={results.length > 0}
+                    />
 
-                {/* Search Filters */}
-                <SearchFilters
-                  showFilters={showFilters}
-                  searchType={searchType}
-                  onSearchTypeChange={setSearchType}
-                  categoryFilter={categoryFilter}
-                  onCategoryFilterChange={setCategoryFilter}
-                  limit={limit}
-                  onLimitChange={setLimit}
-                  similarityThreshold={similarityThreshold}
-                  onSimilarityThresholdChange={setSimilarityThreshold}
-                  caseSensitive={caseSensitive}
-                  onCaseSensitiveChange={setCaseSensitive}
-                  onResetFilters={resetFilters}
-                />
+                    {/* Search Filters */}
+                    <SearchFilters
+                      showFilters={showFilters}
+                      searchType={searchType}
+                      onSearchTypeChange={setSearchType}
+                      categoryFilter={categoryFilter}
+                      onCategoryFilterChange={setCategoryFilter}
+                      limit={limit}
+                      onLimitChange={setLimit}
+                      similarityThreshold={similarityThreshold}
+                      onSimilarityThresholdChange={setSimilarityThreshold}
+                      caseSensitive={caseSensitive}
+                      onCaseSensitiveChange={setCaseSensitive}
+                      onResetFilters={resetFilters}
+                    />
+                  </div>
+                </div>
+
+                {/* Search Results */}
+                <div
+                  className={cn(
+                    "transition-all duration-1000 ease-in-out transform-gpu",
+                    results.length > 0 || isLoading ? "mt-6" : "mt-0",
+                  )}
+                >
+                  <SearchResults
+                    results={results}
+                    totalResults={totalResults}
+                    searchTime={searchTime}
+                    searchType={searchType}
+                    categoryFilter={categoryFilter}
+                    isLoading={isLoading}
+                  />
+                </div>
               </div>
             </div>
-
-            {/* Search Results */}
-            <div
-              className={cn(
-                "transition-all duration-1000 ease-in-out transform-gpu",
-                results.length > 0 || isLoading ? "mt-6" : "mt-0"
-              )}
-            >
-              <SearchResults
-                results={results}
-                totalResults={totalResults}
-                searchTime={searchTime}
-                searchType={searchType}
-                categoryFilter={categoryFilter}
-                isLoading={isLoading}
-              />
-            </div>
           </div>
-        </div>
-      </div>
+        </>
+      )}
       <Toaster />
     </div>
   );

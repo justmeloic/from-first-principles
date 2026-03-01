@@ -5,10 +5,10 @@ publish = "out"
 [build.environment]
 NEXT_USE_NETLIFY = "true"
 # Replace with your actual API endpoint
-# For ngrok: https://your-ngrok-url.ngrok-free.app
+# For ngrok: https://your-subdomain.ngrok-free.dev
 # For direct connection: http://your-raspberry-pi-ip:8081
 # For same domain: leave empty or use relative path
-NEXT_PUBLIC_API_BASE_URL = "https://your-ngrok-url.ngrok-free.app"
+NEXT_PUBLIC_API_BASE_URL = "https://your-subdomain.ngrok-free.dev"
 
 [[redirects]]
 from = "/*"

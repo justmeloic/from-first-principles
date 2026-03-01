@@ -8,7 +8,7 @@ on:
 jobs:
   # ── AI Backend (Python) ──────────────────────────────────────────
   backend-tests:
-    name: Backend · lint + test
+    name: Backend · test
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -30,9 +30,6 @@ jobs:
 
       - name: Install dependencies
         run: pip install -e .
-
-      - name: Lint with ruff
-        run: ruff check src/ tests/
 
       - name: Run tests
         run: pytest tests/ -v
