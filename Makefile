@@ -1,21 +1,20 @@
 # Makefile for deploying services
 
-.PHONY: deploy deploy-ai deploy-frontend reset-dev add-license help clean
+.PHONY: deploy deploy-ai deploy-frontend add-license help clean
 
 # Default target
 help:
 	@echo "Available targets:"
-	@echo "  deploy          - Deploy AI service + Frontend together"
-	@echo "  deploy-ai       - Deploy AI service on Pi with ngrok"
-	@echo "  deploy-frontend - Deploy frontend to Netlify"
-	@echo "  reset-dev       - Merge dev→main, recreate dev, deploy frontend"
+	@echo "  deploy          - Merge dev→main, deploy AI + Frontend, recreate dev"
+	@echo "  deploy-ai       - Deploy AI service on Pi with ngrok (no git ops)"
+	@echo "  deploy-frontend - Deploy frontend to Netlify (no git ops)"
 	@echo "  add-license     - Add license headers to source files"
 	@echo "  clean           - Clean build artifacts and logs"
 	@echo "  help            - Show this help message"
 
-# Deploy both AI service + Frontend
+# Full release: merge dev→main, deploy everything, recreate dev
 deploy:
-	@echo "🚀 Starting full deployment (AI + Frontend)..."
+	@echo "🚀 Starting full deployment (merge + AI + Frontend)..."
 	@chmod +x scripts/deploy-all.sh
 	@cd scripts && ./deploy-all.sh
 
@@ -29,18 +28,6 @@ deploy-frontend:
 	@echo "🚀 Starting frontend deployment..."
 	@chmod +x scripts/deploy-frontend-service.sh
 	@cd scripts && ./deploy-frontend-service.sh
-
-# Merge dev→main, recreate dev branch, deploy frontend
-reset-dev:
-	@echo "🔄 Resetting dev branch and deploying..."
-	@original_dir="$$PWD"; \
-	trap 'cd "$$original_dir" 2>/dev/null || exit; printf "\nReturned to original directory: %s\n" "$$original_dir"' EXIT; \
-	cd scripts && \
-	chmod +x reset-dev-branch.sh deploy-frontend-service.sh && \
-	echo "🔄 Running reset-dev-branch.sh..." && \
-	./reset-dev-branch.sh && \
-	echo "🌐 Running deploy-frontend-service.sh..." && \
-	./deploy-frontend-service.sh
 
 # Add license headers to source files
 add-license:
