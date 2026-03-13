@@ -20,6 +20,8 @@ processes events, and formats the final response.
 
 from __future__ import annotations
 
+import asyncio
+import random
 import time
 import uuid
 from typing import Dict, List, Tuple
@@ -32,6 +34,7 @@ from google.genai import types as genai_types
 from loguru import logger as _logger
 
 from src.agents.agent_factory import agent_factory
+from src.app.core.config import settings
 from src.app.models import AgentConfig
 from src.app.schemas import AgentResponse, Query
 from src.app.utils.formatters import format_text_response
@@ -177,47 +180,71 @@ class AgentService:
         references_json = {}
         session_id = session.id
 
-        async for event in runner.run_async(
-            user_id=config.user_id,
-            session_id=session.id,
-            new_message=user_content,
-        ):
-            await session_service.append_event(session, event)
+        # Retry loop with exponential backoff and jitter
+        last_error = None
+        for attempt in range(settings.RETRY_MAX_ATTEMPTS):
+            try:
+                async for event in runner.run_async(
+                    user_id=config.user_id,
+                    session_id=session.id,
+                    new_message=user_content,
+                ):
+                    await session_service.append_event(session, event)
 
-            # Check if this is a tool call event
-            if hasattr(event, 'actions') and event.actions:
-                if hasattr(event.actions, 'tool_call') and event.actions.tool_call:
-                    tool_name = getattr(event.actions.tool_call, 'name', 'unknown_tool')
-                    await sse_manager.send_tool_start(session_id, tool_name)
-                    self._logger.info(
-                        f'Tool started: {tool_name} for session {session_id}'
+                    # Check if this is a tool call event
+                    if hasattr(event, 'actions') and event.actions:
+                        if hasattr(event.actions, 'tool_call') and event.actions.tool_call:
+                            tool_name = getattr(event.actions.tool_call, 'name', 'unknown_tool')
+                            await sse_manager.send_tool_start(session_id, tool_name)
+                            self._logger.info(
+                                f'Tool started: {tool_name} for session {session_id}'
+                            )
+
+                    if event.is_final_response() and event.content and event.content.parts:
+                        response_text = event.content.parts[0].text
+                        final_response_text, references_json = format_text_response(
+                            response_text=response_text, request=request
+                        )
+
+                        # Send final response via SSE
+                        await sse_manager.send_final_response(session_id, final_response_text)
+
+                        state_changes = {
+                            'last_response': final_response_text,
+                            'last_interaction_ts': time.time(),
+                            'model_name': model_name,
+                        }
+
+                        # Get agent name from the factory
+                        agent = agent_factory.get_agent(model_name)
+
+                        state_update_event = Event(
+                            author=agent.name,
+                            actions=EventActions(state_delta=state_changes),
+                            timestamp=time.time(),
+                            invocation_id=str(uuid.uuid4()),
+                        )
+                        await session_service.append_event(session, state_update_event)
+
+                # Success - break out of retry loop
+                break
+
+            except Exception as e:
+                last_error = e
+                if attempt < settings.RETRY_MAX_ATTEMPTS - 1:
+                    # Exponential backoff with jitter
+                    delay = settings.RETRY_BASE_DELAY * (2 ** attempt)
+                    jitter = delay * random.uniform(0.5, 1.5)
+                    self._logger.warning(
+                        f'Agent call failed (attempt {attempt + 1}/{settings.RETRY_MAX_ATTEMPTS}): {e}. '
+                        f'Retrying in {jitter:.2f}s...'
                     )
-
-            if event.is_final_response() and event.content and event.content.parts:
-                response_text = event.content.parts[0].text
-                final_response_text, references_json = format_text_response(
-                    response_text=response_text, request=request
-                )
-
-                # Send final response via SSE
-                await sse_manager.send_final_response(session_id, final_response_text)
-
-                state_changes = {
-                    'last_response': final_response_text,
-                    'last_interaction_ts': time.time(),
-                    'model_name': model_name,
-                }
-
-                # Get agent name from the factory
-                agent = agent_factory.get_agent(model_name)
-
-                state_update_event = Event(
-                    author=agent.name,
-                    actions=EventActions(state_delta=state_changes),
-                    timestamp=time.time(),
-                    invocation_id=str(uuid.uuid4()),
-                )
-                await session_service.append_event(session, state_update_event)
+                    await asyncio.sleep(jitter)
+                else:
+                    self._logger.error(
+                        f'Agent call failed after {settings.RETRY_MAX_ATTEMPTS} attempts: {e}'
+                    )
+                    raise
 
         return final_response_text, references_json
 
