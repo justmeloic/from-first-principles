@@ -138,6 +138,10 @@ class Settings(BaseSettings):
     AGENT_RATE_LIMIT: str = '10/minute'
     GLOBAL_AGENT_RATE_LIMIT: str = '1000/day'
 
+    # Retry settings (exponential backoff)
+    RETRY_MAX_ATTEMPTS: int = 3
+    RETRY_BASE_DELAY: float = 1.0
+
     # Development settings
     RESTART_SCRIPT_PATH: str = './scripts/restart-server.sh'
 
