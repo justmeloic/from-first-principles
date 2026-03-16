@@ -15,11 +15,11 @@ repos:
     rev: 23.7.0
     hooks:
       - id: black
-        files: ^services/chatmiddleware/   # Only run black on the chatmiddleware service
+        files: ^services/ai/   # Only run black on the ai service
 
   - repo: https://github.com/charliermarsh/ruff-pre-commit
     rev: v0.8.4
     hooks:
       - id: ruff
-        files: ^services/chatmiddleware/  # Only run ruff on the chatmiddleware service
+        files: ^services/ai/  # Only run ruff on the ai service
         args: ["--fix", "--unsafe-fixes"]
