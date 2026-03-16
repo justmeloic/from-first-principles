@@ -35,6 +35,7 @@ dependencies = [
     "rich>=13.0.0",                    # Beautiful terminal output
     "litellm>=1.75.6",
     "slowapi>=0.1.9",
+    "locust>=2.24.0",
 ]
 
 [project.optional-dependencies]
