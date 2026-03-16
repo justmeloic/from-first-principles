@@ -423,13 +423,11 @@ python tests/test_model_integration.py
 #### Common Issues
 
 1. **"Failed to create model"**
-
    - **For Ollama**: Ensure Ollama is running: `ollama serve`
    - **For API models**: Check your API key is valid and has sufficient quota
    - **For Cloud services**: Verify authentication and service permissions
 
 2. **Model not found errors**
-
    - **For Ollama**: Check the model is available: `ollama list`
    - **For API models**: Verify model name matches provider's available models
    - **For Cloud services**: Ensure the model is available in your region
@@ -1055,6 +1053,23 @@ make check
 
 # Clean up temporary files
 make clean
+```
+
+### Load Testing
+
+Requires the server running in a separate terminal:
+
+```bash
+# Start server
+make dev
+
+# In another terminal - Web UI at http://localhost:8089
+./scripts/load_test.sh web
+
+# Headless scenarios
+./scripts/load_test.sh smoke   # 5 users, 30s
+./scripts/load_test.sh load    # 50 users, 5m
+./scripts/load_test.sh stress  # 200 users, 10m
 ```
 
 ## Troubleshooting
