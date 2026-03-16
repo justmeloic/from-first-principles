@@ -283,15 +283,18 @@ class TestSemanticCache:
         # Reset the mock to clear calls from initialization
         mock_table.delete.reset_mock()
 
-        # Mock pandas DataFrame with filtered entries
-        import pandas as pd
+        # Mock pandas DataFrame with filtered entries (without importing pandas)
+        # Simulate df[df['model_name'] == 'gemini-2.5-flash'] returning 2 entries
+        mock_df = MagicMock()
+        mock_filtered = MagicMock()
+        mock_filtered.__len__ = MagicMock(return_value=2)
 
-        mock_df = pd.DataFrame(
-            {
-                'model_name': ['gemini-2.5-flash', 'gemini-2.5-flash', 'llama3.2'],
-                'cache_id': ['id1', 'id2', 'id3'],
-            }
-        )
+        # When df['model_name'] is accessed, return a mock column
+        mock_column = MagicMock()
+        # When df['model_name'] == 'gemini-2.5-flash', return a mask
+        mock_column.__eq__ = MagicMock(return_value=mock_filtered)
+        mock_df.__getitem__ = MagicMock(side_effect=lambda key: mock_column if key == 'model_name' else mock_filtered)
+
         mock_table.to_pandas.return_value = mock_df
 
         count = await cache.clear(model_name='gemini-2.5-flash')
