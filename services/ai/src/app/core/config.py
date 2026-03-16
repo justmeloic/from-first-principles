@@ -142,6 +142,12 @@ class Settings(BaseSettings):
     RETRY_MAX_ATTEMPTS: int = 3
     RETRY_BASE_DELAY: float = 1.0
 
+    # Semantic cache settings
+    CACHE_ENABLED: bool = True
+    CACHE_SIMILARITY_THRESHOLD: float = 0.92  # 0-1, higher = stricter matching
+    CACHE_TTL_HOURS: int = 24 * 7  # 1 week default
+    CACHE_MAX_SIZE: int = 10000  # Maximum number of cached entries
+
     # Development settings
     RESTART_SCRIPT_PATH: str = './scripts/restart-server.sh'
 

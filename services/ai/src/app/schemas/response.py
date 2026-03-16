@@ -45,6 +45,9 @@ class AgentResponse(BaseModel):
     confidence: Optional[float] = Field(
         None, ge=0.0, le=1.0, description='Confidence score of the response'
     )
+    cached: bool = Field(
+        False, description='Whether this response was retrieved from semantic cache'
+    )
 
     class Config:
         """Pydantic configuration."""
@@ -61,6 +64,7 @@ class AgentResponse(BaseModel):
                 'session_id': 'abc123-def456-ghi789',
                 'model': 'gemini-2.5-pro',
                 'confidence': 0.95,
+                'cached': False,
             }
         }
 
