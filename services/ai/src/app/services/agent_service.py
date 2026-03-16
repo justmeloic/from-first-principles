@@ -16,6 +16,7 @@
 
 This service orchestrates the interaction with the ADK runner,
 processes events, and formats the final response.
+Includes semantic caching to reduce latency for repeated similar queries.
 """
 
 from __future__ import annotations
@@ -37,6 +38,7 @@ from src.agents.agent_factory import agent_factory
 from src.app.core.config import settings
 from src.app.models import AgentConfig
 from src.app.schemas import AgentResponse, Query
+from src.app.services.semantic_cache import get_semantic_cache
 from src.app.utils.formatters import format_text_response
 from src.app.utils.sse import sse_manager
 
@@ -248,6 +250,59 @@ class AgentService:
 
         return final_response_text, references_json
 
+    async def _check_semantic_cache(
+        self,
+        query_text: str,
+        model_name: str,
+    ) -> Tuple[bool, str, Dict]:
+        """Check if a semantically similar query exists in the cache.
+
+        Args:
+            query_text: The user's query text.
+            model_name: The model being used.
+
+        Returns:
+            Tuple of (is_cache_hit, cached_response, empty_references).
+        """
+        try:
+            cache = get_semantic_cache()
+            cache_entry = await cache.get(query_text, model_name)
+
+            if cache_entry:
+                self._logger.info(
+                    f'Semantic cache hit (similarity: {cache_entry.similarity_score:.4f}) '
+                    f'for query: "{query_text[:50]}..."'
+                )
+                return True, cache_entry.response, {}
+
+            return False, '', {}
+
+        except Exception as e:
+            self._logger.warning(f'Error checking semantic cache: {e}')
+            return False, '', {}
+
+    async def _store_in_semantic_cache(
+        self,
+        query_text: str,
+        response_text: str,
+        model_name: str,
+    ) -> None:
+        """Store a query-response pair in the semantic cache.
+
+        Args:
+            query_text: The user's query text.
+            response_text: The LLM's response.
+            model_name: The model that generated the response.
+        """
+        try:
+            cache = get_semantic_cache()
+            await cache.put(query_text, response_text, model_name)
+            self._logger.debug(
+                f'Stored response in semantic cache for query: "{query_text[:50]}..."'
+            )
+        except Exception as e:
+            self._logger.warning(f'Error storing in semantic cache: {e}')
+
     async def process_query(
         self,
         request: Request,
@@ -258,6 +313,10 @@ class AgentService:
         model_name: str,
     ) -> AgentResponse:
         """Handles the full lifecycle of an interaction with the agent.
+
+        Includes semantic caching to reduce latency for repeated similar queries.
+        The cache stores query-response pairs and retrieves cached responses
+        for semantically similar queries, bypassing the LLM when possible.
 
         Args:
             request: The incoming FastAPI request object.
@@ -298,6 +357,26 @@ class AgentService:
             else:
                 enhanced_query_text = query.text
 
+            # Check semantic cache for similar queries (only for queries without file uploads)
+            # File uploads are unique contexts and shouldn't be cached
+            if not query.file_artifacts:
+                is_cache_hit, cached_response, cached_refs = await self._check_semantic_cache(
+                    query.text, model_name
+                )
+
+                if is_cache_hit:
+                    self._logger.info(
+                        "Returning cached response for session '%s'",
+                        session_id,
+                    )
+                    return AgentResponse(
+                        response=cached_response,
+                        references=cached_refs,
+                        session_id=session_id,
+                        model=model_name,
+                        cached=True,  # Indicate this was a cache hit
+                    )
+
             user_content = await self._create_and_log_user_event(
                 session_service, session, enhanced_query_text, model_name
             )
@@ -312,6 +391,12 @@ class AgentService:
                 model_name,
             )
 
+            # Store response in semantic cache (only for queries without file uploads)
+            if not query.file_artifacts:
+                await self._store_in_semantic_cache(
+                    query.text, final_response_text, model_name
+                )
+
             self._logger.info(
                 "Successfully processed query for session '%s'. Response: '%s...'",
                 session_id,
@@ -323,6 +408,7 @@ class AgentService:
                 references=references_json,
                 session_id=session_id,
                 model=model_name,
+                cached=False,  # Fresh response from LLM
             )
 
         except Exception as e:

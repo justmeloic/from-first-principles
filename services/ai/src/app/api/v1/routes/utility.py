@@ -80,3 +80,92 @@ async def health_check():
     """
     _logger.info('Health check requested.')
     return {'status': 'healthy', 'version': settings.API_VERSION}
+
+
+@router.get('/cache/stats', tags=['Cache'])
+async def get_cache_stats():
+    """
+    Get semantic cache statistics.
+
+    Returns statistics about the semantic similarity cache including:
+    - Total queries processed
+    - Cache hits and misses
+    - Hit rate percentage
+    - Average latencies for hits and misses
+    - Current cache size and configuration
+
+    Returns:
+        dict: Cache statistics including hit rate, entry count, and configuration.
+
+    Example:
+        GET /cache/stats
+        Response: {
+            "enabled": true,
+            "similarity_threshold": 0.92,
+            "total_queries": 100,
+            "cache_hits": 35,
+            "cache_misses": 65,
+            "hit_rate_percent": 35.0,
+            "total_entries": 50,
+            ...
+        }
+    """
+    from src.app.services.semantic_cache import get_semantic_cache
+
+    _logger.info('Cache stats requested.')
+    try:
+        cache = get_semantic_cache()
+        return cache.get_stats()
+    except Exception as e:
+        _logger.error(f'Failed to get cache stats: {e}')
+        raise HTTPException(
+            status_code=500,
+            detail=f'Failed to get cache stats: {e}',
+        )
+
+
+@router.delete('/cache/clear', tags=['Cache'])
+async def clear_cache(model_name: str = None):
+    """
+    Clear the semantic cache.
+
+    Optionally clear only entries for a specific model. If no model_name is provided,
+    all cache entries will be cleared.
+
+    Args:
+        model_name: Optional model name to clear entries for (e.g., "gemini-2.5-flash").
+                   If not provided, clears the entire cache.
+
+    Returns:
+        dict: Information about the cleared cache entries.
+
+    Example:
+        DELETE /cache/clear
+        Response: {"cleared_entries": 50, "message": "Cache cleared successfully"}
+
+        DELETE /cache/clear?model_name=gemini-2.5-flash
+        Response: {"cleared_entries": 25, "message": "Cache cleared for model: gemini-2.5-flash"}
+    """
+    from src.app.services.semantic_cache import get_semantic_cache
+
+    _logger.warning(f'Cache clear requested. model_name={model_name}')
+    try:
+        cache = get_semantic_cache()
+        cleared_count = await cache.clear(model_name=model_name)
+
+        message = (
+            f'Cache cleared for model: {model_name}'
+            if model_name
+            else 'Cache cleared successfully'
+        )
+
+        return {
+            'cleared_entries': cleared_count,
+            'message': message,
+        }
+    except Exception as e:
+        _logger.error(f'Failed to clear cache: {e}')
+        raise HTTPException(
+            status_code=500,
+            detail=f'Failed to clear cache: {e}',
+        )

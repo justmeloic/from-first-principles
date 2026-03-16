@@ -19,5 +19,6 @@ parts of the application.
 """
 
 from .agent_service import AgentService, agent_service
+from .semantic_cache import SemanticCache, get_semantic_cache
 
-__all__ = ['AgentService', 'agent_service']
+__all__ = ['AgentService', 'agent_service', 'SemanticCache', 'get_semantic_cache']
