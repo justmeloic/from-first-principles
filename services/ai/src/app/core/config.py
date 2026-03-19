@@ -58,37 +58,37 @@ class Settings(BaseSettings):
     # Loïc: perhaps confusingly, The "model" in model_config refers to the
     # Pydantic data model Unfortunately, we can't rename model_config
     # because it's the specific name Pydantic V2 looks for to apply its configuration.
-    model_config = ConfigDict(env_file='.env', case_sensitive=True, extra='ignore')
+    model_config = ConfigDict(env_file=".env", case_sensitive=True, extra="ignore")
 
     # Pydantic's BaseSettings automatically treats
     # variables with no default values as required
 
-    HOST: str = '0.0.0.0'
+    HOST: str = "0.0.0.0"
     PORT: int = 8081
-    LOG_LEVEL: str = 'INFO'
+    LOG_LEVEL: str = "INFO"
     DEBUG: bool = False
-    ENVIRONMENT: str = 'development'
+    ENVIRONMENT: str = "development"
 
     # API settings
-    API_TITLE: str = 'AgentChat API'
-    API_DESCRIPTION: str = 'API for interacting with multi-model AI agents'
-    API_VERSION: str = '1.0.0'
+    API_TITLE: str = "AgentChat API"
+    API_DESCRIPTION: str = "API for interacting with multi-model AI agents"
+    API_VERSION: str = "1.0.0"
 
     # Frontend URL for CORS
-    FRONTEND_URL: str = 'http://localhost:3000'
+    FRONTEND_URL: str = "http://localhost:3000"
 
     # Model settings
-    GEMINI_MODEL: str = 'gemini-2.5-flash'
-    GEMINI_MODEL_PRO: str = 'gemini-2.5-pro'
-    DEFAULT_MODEL: str = 'gemini-2.5-flash'
+    GEMINI_MODEL: str = "gemini-2.5-flash"
+    GEMINI_MODEL_PRO: str = "gemini-2.5-pro"
+    DEFAULT_MODEL: str = "gemini-2.5-flash"
 
     # Model provider settings
-    MODEL_PROVIDER: str = 'gemini'  # 'gemini' or 'ollama'
+    MODEL_PROVIDER: str = "gemini"  # 'gemini' or 'ollama'
 
     # Ollama settings
-    OLLAMA_API_BASE: str = 'http://localhost:11434'
-    OLLAMA_MODEL: str = 'mistral-small3.1'
-    OLLAMA_MODEL_PRO: str = 'llama3.2'
+    OLLAMA_API_BASE: str = "http://localhost:11434"
+    OLLAMA_MODEL: str = "mistral-small3.1"
+    OLLAMA_MODEL_PRO: str = "llama3.2"
 
     # Authentication settings
     AUTH_SECRET: str
@@ -96,47 +96,47 @@ class Settings(BaseSettings):
 
     # Model configuration
     AVAILABLE_MODELS: dict = {
-        'gemini-2.5-flash': {
-            'name': 'gemini-2.5-flash',
-            'display_name': 'Gemini 2.5 Flash',
-            'description': "Google's latest fast model with improved capabilities",
-            'max_tokens': 4096,
-            'supports_tools': True,
-            'default_temperature': 0.1,
-            'provider': 'gemini',
+        "gemini-2.5-flash": {
+            "name": "gemini-2.5-flash",
+            "display_name": "Gemini 2.5 Flash",
+            "description": "Google's latest fast model with improved capabilities",
+            "max_tokens": 4096,
+            "supports_tools": True,
+            "default_temperature": 0.1,
+            "provider": "gemini",
         },
-        'gemini-2.5-pro': {
-            'name': 'gemini-2.5-pro',
-            'display_name': 'Gemini 2.5 Pro',
-            'description': "Google's latest high-quality model for complex reasoning",
-            'max_tokens': 8192,
-            'supports_tools': True,
-            'default_temperature': 0.1,
-            'provider': 'gemini',
+        "gemini-2.5-pro": {
+            "name": "gemini-2.5-pro",
+            "display_name": "Gemini 2.5 Pro",
+            "description": "Google's latest high-quality model for complex reasoning",
+            "max_tokens": 8192,
+            "supports_tools": True,
+            "default_temperature": 0.1,
+            "provider": "gemini",
         },
-        'mistral-small3.1': {
-            'name': 'mistral-small3.1',
-            'display_name': 'Mistral Small 3.1',
-            'description': 'Mistral Small model with tool support',
-            'max_tokens': 4096,
-            'supports_tools': False,  # Temporarily disable tools
-            'default_temperature': 0.1,
-            'provider': 'ollama',
+        "mistral-small3.1": {
+            "name": "mistral-small3.1",
+            "display_name": "Mistral Small 3.1",
+            "description": "Mistral Small model with tool support",
+            "max_tokens": 4096,
+            "supports_tools": False,  # Temporarily disable tools
+            "default_temperature": 0.1,
+            "provider": "ollama",
         },
-        'llama3.2': {
-            'name': 'llama3.2',
-            'display_name': 'Llama 3.2',
-            'description': 'Meta Llama 3.2 model',
-            'max_tokens': 4096,
-            'supports_tools': False,  # Temporarily disable tools
-            'default_temperature': 0.1,
-            'provider': 'ollama',
+        "llama3.2": {
+            "name": "llama3.2",
+            "display_name": "Llama 3.2",
+            "description": "Meta Llama 3.2 model",
+            "max_tokens": 4096,
+            "supports_tools": False,  # Temporarily disable tools
+            "default_temperature": 0.1,
+            "provider": "ollama",
         },
     }
 
     # Rate limiting
-    AGENT_RATE_LIMIT: str = '10/minute'
-    GLOBAL_AGENT_RATE_LIMIT: str = '1000/day'
+    AGENT_RATE_LIMIT: str = "10/minute"
+    GLOBAL_AGENT_RATE_LIMIT: str = "1000/day"
 
     # Retry settings (exponential backoff)
     RETRY_MAX_ATTEMPTS: int = 3
@@ -145,28 +145,30 @@ class Settings(BaseSettings):
     # Semantic cache settings
     CACHE_ENABLED: bool = True
     CACHE_SIMILARITY_THRESHOLD: float = 0.92  # 0-1, higher = stricter matching
+    CACHE_TABLE_NAME: str = "semantic_cache"
     CACHE_TTL_HOURS: int = 24 * 7  # 1 week default
     CACHE_MAX_SIZE: int = 10000  # Maximum number of cached entries
+    CACHE_EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"  # SentenceTransformer model
 
     # Development settings
-    RESTART_SCRIPT_PATH: str = './scripts/restart-server.sh'
+    RESTART_SCRIPT_PATH: str = "./scripts/restart-server.sh"
 
-    @field_validator('MODEL_PROVIDER', mode='before')
+    @field_validator("MODEL_PROVIDER", mode="before")
     @classmethod
     def validate_model_provider(cls, v: str) -> str:
         """Validate model provider is one of the allowed values."""
-        allowed_providers = ['gemini', 'ollama']
+        allowed_providers = ["gemini", "ollama"]
         if v.lower() not in allowed_providers:
-            raise ValueError(f'MODEL_PROVIDER must be one of {allowed_providers}')
+            raise ValueError(f"MODEL_PROVIDER must be one of {allowed_providers}")
         return v.lower()
 
-    @field_validator('LOG_LEVEL', mode='before')
+    @field_validator("LOG_LEVEL", mode="before")
     @classmethod
     def validate_log_level(cls, v: str) -> str:
         """Validate log level is one of the allowed values."""
-        allowed_levels = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
+        allowed_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
         if v.upper() not in allowed_levels:
-            raise ValueError(f'LOG_LEVEL must be one of {allowed_levels}')
+            raise ValueError(f"LOG_LEVEL must be one of {allowed_levels}")
         return v.upper()
 
     @property
@@ -191,13 +193,13 @@ class Settings(BaseSettings):
     def cors(self) -> CorsConfig:
         """Get CORS configuration."""
         # Support multiple origins separated by commas
-        origins = [url.strip() for url in self.FRONTEND_URL.split(',') if url.strip()]
+        origins = [url.strip() for url in self.FRONTEND_URL.split(",") if url.strip()]
         return CorsConfig(
             allow_origins=origins,
             allow_credentials=True,
-            allow_methods=['GET', 'POST', 'OPTIONS'],
-            allow_headers=['*', 'X-Session-ID'],
-            expose_headers=['X-Session-ID'],
+            allow_methods=["GET", "POST", "OPTIONS"],
+            allow_headers=["*", "X-Session-ID"],
+            expose_headers=["X-Session-ID"],
         )
 
     @property

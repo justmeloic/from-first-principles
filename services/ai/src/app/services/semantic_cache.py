@@ -34,7 +34,7 @@ import uuid
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from loguru import logger as _logger
 
@@ -51,6 +51,8 @@ try:
     SENTENCE_TRANSFORMERS_AVAILABLE = True
 except ImportError:
     SENTENCE_TRANSFORMERS_AVAILABLE = False
+
+from src.app.core.config import settings
 
 
 @dataclass
@@ -97,21 +99,15 @@ class SemanticCache:
     - Cosine similarity for measuring query similarity
     """
 
-    # Default configuration
-    DEFAULT_SIMILARITY_THRESHOLD = 0.92  # High threshold for accuracy
-    DEFAULT_CACHE_TABLE_NAME = 'semantic_cache'
-    DEFAULT_MAX_CACHE_SIZE = 10000
-    DEFAULT_TTL_HOURS = 24 * 7  # 1 week
-
     def __init__(
         self,
-        similarity_threshold: float = DEFAULT_SIMILARITY_THRESHOLD,
-        cache_table_name: str = DEFAULT_CACHE_TABLE_NAME,
-        max_cache_size: int = DEFAULT_MAX_CACHE_SIZE,
-        ttl_hours: int = DEFAULT_TTL_HOURS,
+        similarity_threshold: Optional[float] = None,
+        cache_table_name: Optional[str] = None,
+        max_cache_size: Optional[int] = None,
+        ttl_hours: Optional[int] = None,
         db_path: Optional[str] = None,
-        model_name: str = 'all-MiniLM-L6-v2',
-        enabled: bool = True,
+        model_name: Optional[str] = None,
+        enabled: Optional[bool] = None,
     ):
         """Initialize the semantic cache.
 
@@ -126,12 +122,28 @@ class SemanticCache:
             enabled: Whether caching is enabled.
         """
         self._logger = _logger
-        self.enabled = enabled
-        self.similarity_threshold = similarity_threshold
-        self.cache_table_name = cache_table_name
-        self.max_cache_size = max_cache_size
-        self.ttl_hours = ttl_hours
-        self.model_name = model_name
+
+        # Use config settings, allow overrides via constructor
+        self.enabled = enabled if enabled is not None else settings.CACHE_ENABLED
+        self.similarity_threshold = (
+            similarity_threshold
+            if similarity_threshold is not None
+            else settings.CACHE_SIMILARITY_THRESHOLD
+        )
+        self.cache_table_name = (
+            cache_table_name
+            if cache_table_name is not None
+            else settings.CACHE_TABLE_NAME
+        )
+        self.max_cache_size = (
+            max_cache_size if max_cache_size is not None else settings.CACHE_MAX_SIZE
+        )
+        self.ttl_hours = (
+            ttl_hours if ttl_hours is not None else settings.CACHE_TTL_HOURS
+        )
+        self.model_name = (
+            model_name if model_name is not None else settings.CACHE_EMBEDDING_MODEL
+        )
 
         # Initialize components
         self.embedding_model: Optional[SentenceTransformer] = None
@@ -147,7 +159,9 @@ class SemanticCache:
         # Set up database path
         if db_path is None:
             # Use default path relative to the services/ai directory
-            self.db_path = Path(__file__).parent.parent.parent.parent / 'data' / 'lancedb'
+            self.db_path = (
+                Path(__file__).parent.parent.parent.parent / "data" / "lancedb"
+            )
         else:
             self.db_path = Path(db_path)
 
@@ -164,38 +178,38 @@ class SemanticCache:
             self._initialize_embedding_model()
             self._initialize_database()
             self._logger.info(
-                f'SemanticCache initialized: threshold={self.similarity_threshold}, '
-                f'model={self.model_name}, db={self.db_path}'
+                f"SemanticCache initialized: threshold={self.similarity_threshold}, "
+                f"model={self.model_name}, db={self.db_path}"
             )
         except Exception as e:
-            self._logger.error(f'Failed to initialize SemanticCache: {e}')
+            self._logger.error(f"Failed to initialize SemanticCache: {e}")
             self.enabled = False
 
     def _initialize_embedding_model(self) -> None:
         """Initialize the sentence transformer embedding model."""
         if not SENTENCE_TRANSFORMERS_AVAILABLE:
             raise ImportError(
-                'sentence-transformers is required for semantic caching. '
-                'Install with: pip install sentence-transformers'
+                "sentence-transformers is required for semantic caching. "
+                "Install with: pip install sentence-transformers"
             )
 
-        self._logger.info(f'Loading embedding model: {self.model_name}')
-        self.embedding_model = SentenceTransformer(self.model_name, device='cpu')
+        self._logger.info(f"Loading embedding model: {self.model_name}")
+        self.embedding_model = SentenceTransformer(self.model_name, device="cpu")
         dim = self.embedding_model.get_sentence_embedding_dimension()
         if dim is None:
-            raise RuntimeError('Could not determine embedding dimension')
+            raise RuntimeError("Could not determine embedding dimension")
         self.embedding_dim = dim
         self._logger.info(
-            f'Embedding model loaded: dim={self.embedding_dim}, '
-            f'max_seq_len={self.embedding_model.max_seq_length}'
+            f"Embedding model loaded: dim={self.embedding_dim}, "
+            f"max_seq_len={self.embedding_model.max_seq_length}"
         )
 
     def _initialize_database(self) -> None:
         """Initialize LanceDB connection and cache table."""
         if not LANCEDB_AVAILABLE:
             raise ImportError(
-                'lancedb is required for semantic caching. '
-                'Install with: pip install lancedb'
+                "lancedb is required for semantic caching. "
+                "Install with: pip install lancedb"
             )
 
         # Ensure database directory exists
@@ -203,7 +217,7 @@ class SemanticCache:
 
         # Connect to database
         self.db = lancedb.connect(str(self.db_path))
-        self._logger.info(f'Connected to LanceDB at: {self.db_path}')
+        self._logger.info(f"Connected to LanceDB at: {self.db_path}")
 
         # Initialize cache table
         self._ensure_cache_table_exists()
@@ -220,31 +234,33 @@ class SemanticCache:
                 self._create_cache_table()
             else:
                 self.cache_table = self.db.open_table(self.cache_table_name)
-                self._logger.info(f'Opened existing cache table: {self.cache_table_name}')
+                self._logger.info(
+                    f"Opened existing cache table: {self.cache_table_name}"
+                )
 
         except Exception as e:
-            self._logger.error(f'Error setting up cache table: {e}')
+            self._logger.error(f"Error setting up cache table: {e}")
             self._create_cache_table()
 
     def _create_cache_table(self) -> None:
         """Create the cache table with the correct schema."""
         if self.db is None:
-            raise RuntimeError('Database not initialized')
+            raise RuntimeError("Database not initialized")
 
-        self._logger.info(f'Creating cache table: {self.cache_table_name}')
+        self._logger.info(f"Creating cache table: {self.cache_table_name}")
 
         # Create sample entry to establish schema
         sample_entry = {
-            'cache_id': 'sample_entry_for_schema',
-            'query': 'Sample query for schema creation',
-            'query_hash': hashlib.md5('sample'.encode()).hexdigest(),
-            'response': 'Sample response',
-            'model_name': self.model_name,
-            'vector': [0.0] * self.embedding_dim,
-            'created_at': datetime.now().isoformat(),
-            'last_accessed': datetime.now().isoformat(),
-            'hit_count': 0,
-            'ttl_hours': self.ttl_hours,
+            "cache_id": "sample_entry_for_schema",
+            "query": "Sample query for schema creation",
+            "query_hash": hashlib.md5("sample".encode()).hexdigest(),
+            "response": "Sample response",
+            "model_name": self.model_name,
+            "vector": [0.0] * self.embedding_dim,
+            "created_at": datetime.now().isoformat(),
+            "last_accessed": datetime.now().isoformat(),
+            "hit_count": 0,
+            "ttl_hours": self.ttl_hours,
         }
 
         # Create table
@@ -253,7 +269,7 @@ class SemanticCache:
         # Remove sample entry
         if self.cache_table is not None:
             self.cache_table.delete("cache_id = 'sample_entry_for_schema'")
-        self._logger.info(f'Created cache table: {self.cache_table_name}')
+        self._logger.info(f"Created cache table: {self.cache_table_name}")
 
     def _generate_embedding(self, text: str) -> List[float]:
         """Generate embedding for the given text.
@@ -265,7 +281,7 @@ class SemanticCache:
             List of floats representing the embedding vector.
         """
         if self.embedding_model is None:
-            raise RuntimeError('Embedding model not initialized')
+            raise RuntimeError("Embedding model not initialized")
 
         # Normalize and encode
         embedding = self.embedding_model.encode(
@@ -275,7 +291,7 @@ class SemanticCache:
         )
 
         # Convert to list of floats
-        if hasattr(embedding, 'tolist'):
+        if hasattr(embedding, "tolist"):
             result = embedding.tolist()
         else:
             result = [float(x) for x in embedding]
@@ -291,7 +307,7 @@ class SemanticCache:
         Returns:
             MD5 hash of the normalized query and model.
         """
-        normalized = f'{model_name}:{query.strip().lower()}'
+        normalized = f"{model_name}:{query.strip().lower()}"
         return hashlib.md5(normalized.encode()).hexdigest()
 
     async def get(
@@ -340,14 +356,14 @@ class SemanticCache:
 
             # Calculate similarity score (LanceDB returns distance, not similarity)
             # For normalized vectors with cosine distance: similarity = 1 - distance
-            distance = result.get('_distance', 1.0)
+            distance = result.get("_distance", 1.0)
             similarity_score = 1.0 - distance
 
             # Check if similarity exceeds threshold
             if similarity_score < self.similarity_threshold:
                 self._logger.debug(
-                    f'Cache miss: similarity {similarity_score:.4f} < '
-                    f'threshold {self.similarity_threshold}'
+                    f"Cache miss: similarity {similarity_score:.4f} < "
+                    f"threshold {self.similarity_threshold}"
                 )
                 self._record_miss(start_time)
                 return None
@@ -356,25 +372,25 @@ class SemanticCache:
             self._record_hit(start_time)
 
             # Update access statistics (fire and forget)
-            await self._update_access_stats(result['cache_id'])
+            await self._update_access_stats(result["cache_id"])
 
             self._logger.info(
-                f'Cache hit: similarity={similarity_score:.4f}, '
+                f"Cache hit: similarity={similarity_score:.4f}, "
                 f'query="{query[:50]}..."'
             )
 
             return CacheEntry(
-                query=result['query'],
-                response=result['response'],
-                model_name=result['model_name'],
+                query=result["query"],
+                response=result["response"],
+                model_name=result["model_name"],
                 similarity_score=similarity_score,
-                created_at=datetime.fromisoformat(result['created_at']),
-                hit_count=result.get('hit_count', 0) + 1,
+                created_at=datetime.fromisoformat(result["created_at"]),
+                hit_count=result.get("hit_count", 0) + 1,
                 last_accessed=datetime.now(),
             )
 
         except Exception as e:
-            self._logger.error(f'Error during cache lookup: {e}')
+            self._logger.error(f"Error during cache lookup: {e}")
             self._record_miss(start_time)
             return None
 
@@ -415,21 +431,21 @@ class SemanticCache:
 
             if existing:
                 # Update existing entry
-                self._logger.debug(f'Updating existing cache entry: {query_hash}')
+                self._logger.debug(f"Updating existing cache entry: {query_hash}")
                 self.cache_table.delete(f"query_hash = '{query_hash}'")
 
             # Create new cache entry
             cache_entry = {
-                'cache_id': str(uuid.uuid4()),
-                'query': query,
-                'query_hash': query_hash,
-                'response': response,
-                'model_name': model_name,
-                'vector': query_embedding,
-                'created_at': datetime.now().isoformat(),
-                'last_accessed': datetime.now().isoformat(),
-                'hit_count': 0,
-                'ttl_hours': self.ttl_hours,
+                "cache_id": str(uuid.uuid4()),
+                "query": query,
+                "query_hash": query_hash,
+                "response": response,
+                "model_name": model_name,
+                "vector": query_embedding,
+                "created_at": datetime.now().isoformat(),
+                "last_accessed": datetime.now().isoformat(),
+                "hit_count": 0,
+                "ttl_hours": self.ttl_hours,
             }
 
             # Insert into cache
@@ -438,12 +454,12 @@ class SemanticCache:
 
             self._logger.debug(
                 f'Cached response for query: "{query[:50]}..." '
-                f'(model: {model_name})'
+                f"(model: {model_name})"
             )
             return True
 
         except Exception as e:
-            self._logger.error(f'Error caching response: {e}')
+            self._logger.error(f"Error caching response: {e}")
             return False
 
     async def _update_access_stats(self, cache_id: str) -> None:
@@ -458,7 +474,7 @@ class SemanticCache:
             # using a separate stats table or updating periodically.
             pass
         except Exception as e:
-            self._logger.debug(f'Failed to update access stats: {e}')
+            self._logger.debug(f"Failed to update access stats: {e}")
 
     async def _evict_if_needed(self) -> None:
         """Evict old entries if cache size exceeds maximum."""
@@ -472,26 +488,26 @@ class SemanticCache:
                 # Evict oldest 10% of entries
                 evict_count = int(self.max_cache_size * 0.1)
                 self._logger.info(
-                    f'Cache size {current_size} >= max {self.max_cache_size}, '
-                    f'evicting {evict_count} oldest entries'
+                    f"Cache size {current_size} >= max {self.max_cache_size}, "
+                    f"evicting {evict_count} oldest entries"
                 )
 
                 # Get oldest entries
                 df = self.cache_table.to_pandas()
-                df_sorted = df.sort_values('created_at', ascending=True)
-                ids_to_evict = df_sorted['cache_id'].head(evict_count).tolist()
+                df_sorted = df.sort_values("created_at", ascending=True)
+                ids_to_evict = df_sorted["cache_id"].head(evict_count).tolist()
 
                 # Delete oldest entries
                 for cache_id in ids_to_evict:
                     self.cache_table.delete(f"cache_id = '{cache_id}'")
 
-                self._logger.info(f'Evicted {len(ids_to_evict)} cache entries')
+                self._logger.info(f"Evicted {len(ids_to_evict)} cache entries")
 
             # Also evict expired entries (TTL)
             await self._evict_expired()
 
         except Exception as e:
-            self._logger.error(f'Error during cache eviction: {e}')
+            self._logger.error(f"Error during cache eviction: {e}")
 
     async def _evict_expired(self) -> None:
         """Evict entries that have exceeded their TTL."""
@@ -507,20 +523,20 @@ class SemanticCache:
             expired_ids = []
 
             for _, row in df.iterrows():
-                created = datetime.fromisoformat(row['created_at'])
-                ttl = row.get('ttl_hours', self.ttl_hours)
+                created = datetime.fromisoformat(row["created_at"])
+                ttl = row.get("ttl_hours", self.ttl_hours)
                 age_hours = (now - created).total_seconds() / 3600
 
                 if age_hours > ttl:
-                    expired_ids.append(row['cache_id'])
+                    expired_ids.append(row["cache_id"])
 
             if expired_ids:
                 for cache_id in expired_ids:
                     self.cache_table.delete(f"cache_id = '{cache_id}'")
-                self._logger.info(f'Evicted {len(expired_ids)} expired cache entries')
+                self._logger.info(f"Evicted {len(expired_ids)} expired cache entries")
 
         except Exception as e:
-            self._logger.debug(f'Error evicting expired entries: {e}')
+            self._logger.debug(f"Error evicting expired entries: {e}")
 
     def _record_hit(self, start_time: float) -> None:
         """Record a cache hit for statistics."""
@@ -532,8 +548,8 @@ class SemanticCache:
         if len(self._hit_latencies) > 1000:
             self._hit_latencies = self._hit_latencies[-1000:]
 
-        self._stats.avg_hit_latency_ms = (
-            sum(self._hit_latencies) / len(self._hit_latencies)
+        self._stats.avg_hit_latency_ms = sum(self._hit_latencies) / len(
+            self._hit_latencies
         )
 
     def _record_miss(self, start_time: float) -> None:
@@ -546,8 +562,8 @@ class SemanticCache:
         if len(self._miss_latencies) > 1000:
             self._miss_latencies = self._miss_latencies[-1000:]
 
-        self._stats.avg_miss_latency_ms = (
-            sum(self._miss_latencies) / len(self._miss_latencies)
+        self._stats.avg_miss_latency_ms = sum(self._miss_latencies) / len(
+            self._miss_latencies
         )
 
     def get_stats(self) -> Dict[str, Any]:
@@ -557,18 +573,18 @@ class SemanticCache:
             Dictionary with cache statistics.
         """
         return {
-            'enabled': self.enabled,
-            'similarity_threshold': self.similarity_threshold,
-            'total_queries': self._stats.total_queries,
-            'cache_hits': self._stats.cache_hits,
-            'cache_misses': self._stats.cache_misses,
-            'hit_rate_percent': round(self._stats.hit_rate, 2),
-            'total_entries': self._stats.total_entries,
-            'max_cache_size': self.max_cache_size,
-            'avg_hit_latency_ms': round(self._stats.avg_hit_latency_ms, 2),
-            'avg_miss_latency_ms': round(self._stats.avg_miss_latency_ms, 2),
-            'model_name': self.model_name,
-            'ttl_hours': self.ttl_hours,
+            "enabled": self.enabled,
+            "similarity_threshold": self.similarity_threshold,
+            "total_queries": self._stats.total_queries,
+            "cache_hits": self._stats.cache_hits,
+            "cache_misses": self._stats.cache_misses,
+            "hit_rate_percent": round(self._stats.hit_rate, 2),
+            "total_entries": self._stats.total_entries,
+            "max_cache_size": self.max_cache_size,
+            "avg_hit_latency_ms": round(self._stats.avg_hit_latency_ms, 2),
+            "avg_miss_latency_ms": round(self._stats.avg_miss_latency_ms, 2),
+            "model_name": self.model_name,
+            "ttl_hours": self.ttl_hours,
         }
 
     async def clear(self, model_name: Optional[str] = None) -> int:
@@ -588,7 +604,7 @@ class SemanticCache:
             if model_name:
                 # Clear only entries for specific model
                 df = self.cache_table.to_pandas()
-                count = len(df[df['model_name'] == model_name])
+                count = len(df[df["model_name"] == model_name])
                 self.cache_table.delete(f"model_name = '{model_name}'")
             else:
                 # Clear all entries
@@ -598,11 +614,11 @@ class SemanticCache:
 
             if self.cache_table is not None:
                 self._stats.total_entries = len(self.cache_table.to_pandas())
-            self._logger.info(f'Cleared {count} cache entries')
+            self._logger.info(f"Cleared {count} cache entries")
             return count
 
         except Exception as e:
-            self._logger.error(f'Error clearing cache: {e}')
+            self._logger.error(f"Error clearing cache: {e}")
             return 0
 
     async def invalidate_similar(
@@ -627,15 +643,11 @@ class SemanticCache:
 
         try:
             query_embedding = self._generate_embedding(query)
-            results = (
-                self.cache_table.search(query_embedding)
-                .limit(100)
-                .to_list()
-            )
+            results = self.cache_table.search(query_embedding).limit(100).to_list()
 
             invalidated = 0
             for result in results:
-                distance = result.get('_distance', 1.0)
+                distance = result.get("_distance", 1.0)
                 similarity = 1.0 - distance
 
                 if similarity >= threshold:
@@ -644,14 +656,14 @@ class SemanticCache:
 
             if invalidated:
                 self._logger.info(
-                    f'Invalidated {invalidated} cache entries similar to: '
+                    f"Invalidated {invalidated} cache entries similar to: "
                     f'"{query[:50]}..."'
                 )
 
             return invalidated
 
         except Exception as e:
-            self._logger.error(f'Error invalidating cache entries: {e}')
+            self._logger.error(f"Error invalidating cache entries: {e}")
             return 0
 
 
@@ -668,23 +680,7 @@ def get_semantic_cache() -> SemanticCache:
     global _semantic_cache
 
     if _semantic_cache is None:
-        # Import settings here to avoid circular imports
-        try:
-            from src.app.core.config import settings
-
-            _semantic_cache = SemanticCache(
-                similarity_threshold=getattr(
-                    settings, 'CACHE_SIMILARITY_THRESHOLD', 0.92
-                ),
-                enabled=getattr(settings, 'CACHE_ENABLED', True),
-                ttl_hours=getattr(settings, 'CACHE_TTL_HOURS', 24 * 7),
-                max_cache_size=getattr(settings, 'CACHE_MAX_SIZE', 10000),
-            )
-        except Exception as e:
-            _logger.warning(
-                f'Failed to initialize semantic cache with settings: {e}. '
-                'Using defaults.'
-            )
-            _semantic_cache = SemanticCache()
+        # SemanticCache now reads settings automatically
+        _semantic_cache = SemanticCache()
 
     return _semantic_cache
