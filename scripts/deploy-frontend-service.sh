@@ -1,7 +1,13 @@
 #!/bin/bash
 
+# Get script directory and set up logging
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+LOG_DIR="$PROJECT_ROOT/logs"
+mkdir -p "$LOG_DIR"
+
 # Redirect all output to a log file and also to the console
-exec > >(tee -a logs/deploy-frontend-service.log) 2>&1
+exec > >(tee -a "$LOG_DIR/deploy-frontend-service.log") 2>&1
 # Script to checkout main, update it, and deploy the frontend service
 
 #set -euo pipefail # Exit on any error
