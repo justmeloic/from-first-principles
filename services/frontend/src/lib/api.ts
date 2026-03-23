@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { MessageResponse, ModelsResponse, SearchHealth, SearchQuery, SearchResponse, SearchStats } from "@/types";
+import { MessageResponse, ModelsResponse, SearchHealth, SearchQuery, SearchResponse, SearchStats, SSEEvent } from "@/types";
 
 // Use environment variable with fallback;
 // setting the fallback to an empty string will cause the frontend
@@ -92,6 +92,96 @@ export const sendMessage = async (
     throw error;
   }
 };
+
+/**
+ * Stream a message to the agent and yield SSE events as they arrive.
+ * Enables real-time token-by-token response display.
+ */
+export async function* streamMessage(
+  message: string,
+  files?: File[],
+  options?: SendMessageOptions
+): AsyncGenerator<SSEEvent, void, unknown> {
+  const storedSessionId = localStorage.getItem('agentChatSessionId');
+
+  const formData = new FormData();
+  formData.append('text', message);
+
+  if (options?.model) {
+    formData.append('model', options.model);
+  }
+
+  if (files && files.length > 0) {
+    files.forEach((file) => {
+      formData.append('files', file);
+    });
+  }
+
+  const response = await fetch(`${BASE_URL}/api/v1/root_agent/stream`, {
+    method: 'POST',
+    headers: {
+      ...COMMON_HEADERS,
+      'X-Session-ID': storedSessionId || '',
+    },
+    body: formData,
+    signal: options?.signal,
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  // Update session ID from response
+  const newSessionId = response.headers.get('x-session-id');
+  if (newSessionId) {
+    if (storedSessionId && storedSessionId !== newSessionId) {
+      localStorage.removeItem('agentChatHistory');
+      localStorage.removeItem('agentChatReferences');
+      localStorage.removeItem('agentIsFirstPrompt');
+    }
+    localStorage.setItem('agentChatSessionId', newSessionId);
+  }
+
+  const reader = response.body!.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+
+      // Process complete SSE messages (separated by double newlines)
+      const lines = buffer.split('\n\n');
+      buffer = lines.pop() || ''; // Keep incomplete message in buffer
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          try {
+            const data = JSON.parse(line.slice(6));
+            yield data as SSEEvent;
+          } catch (e) {
+            console.warn('Failed to parse SSE event:', line);
+          }
+        }
+      }
+    }
+
+    // Process any remaining data in buffer
+    if (buffer.startsWith('data: ')) {
+      try {
+        const data = JSON.parse(buffer.slice(6));
+        yield data as SSEEvent;
+      } catch (e) {
+        // Ignore incomplete final chunk
+      }
+    }
+  } finally {
+    reader.releaseLock();
+  }
+}
 
 export const getAvailableModels = async (): Promise<ModelsResponse> => {
   try {

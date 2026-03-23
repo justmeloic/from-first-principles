@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/toaster";
 import { useServiceHealth } from "@/hooks/use-service-health";
 import { useToast } from "@/hooks/use-toast";
-import { getAvailableModels, sendMessage, startNewSession } from "@/lib/api";
+import { getAvailableModels, startNewSession, streamMessage } from "@/lib/api";
 import { useTheme } from "@/providers/theme-provider";
 import { ChatMessage, Reference } from "@/types";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -54,6 +54,7 @@ export default function AgentPage() {
   );
   const [isFirstPrompt, setIsFirstPrompt] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const [loadingText, setLoadingText] = useState("Thinking...");
   const [isReferencesHidden, setIsReferencesHidden] = useState(true);
   const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -196,49 +197,93 @@ export default function AgentPage() {
       abortControllerRef.current = new AbortController();
 
       setIsLoading(true);
+      setIsStreaming(false);
       setLoadingText("Thinking...");
       setChatHistory((prev) => [
         ...prev,
         { role: "user", content: userMessage },
-        { role: "bot", content: "Thinking..." },
+        { role: "bot", content: "" },
       ]);
       setTimeout(scrollToBottom, 0);
 
       try {
-        const response = await sendMessage(userMessage, files, {
+        let accumulatedContent = "";
+
+        // Use streaming for real-time token display
+        for await (const event of streamMessage(userMessage, files, {
           signal: abortControllerRef.current.signal,
-        });
-
-        if (abortControllerRef.current.signal.aborted) {
-          return;
-        }
-
-        if (
-          response.references &&
-          Object.keys(response.references).length > 0
-        ) {
-          setReferences(response.references);
-        }
-
-        setChatHistory((prev) => {
-          const newHistory = [...prev];
-          if (
-            newHistory.length > 0 &&
-            newHistory[newHistory.length - 1].role === "bot"
-          ) {
-            newHistory[newHistory.length - 1] = {
-              role: "bot",
-              content: response.response,
-            };
-          } else {
-            newHistory.push({ role: "bot", content: response.response });
+        })) {
+          if (abortControllerRef.current.signal.aborted) {
+            return;
           }
-          return newHistory;
-        });
+
+          switch (event.type) {
+            case "status":
+              setLoadingText(event.message);
+              break;
+
+            case "tool_start":
+              setLoadingText(`Using ${event.tool_name}...`);
+              break;
+
+            case "token":
+              // First token - switch from loading to streaming mode
+              if (!accumulatedContent) {
+                setIsStreaming(true);
+              }
+              accumulatedContent += event.content;
+              setChatHistory((prev) => {
+                const newHistory = [...prev];
+                if (
+                  newHistory.length > 0 &&
+                  newHistory[newHistory.length - 1].role === "bot"
+                ) {
+                  newHistory[newHistory.length - 1] = {
+                    role: "bot",
+                    content: accumulatedContent,
+                  };
+                }
+                return newHistory;
+              });
+              scrollToBottom();
+              break;
+
+            case "complete":
+              setIsStreaming(false);
+              // Final response with formatted content and references
+              if (
+                event.references &&
+                Object.keys(event.references).length > 0
+              ) {
+                setReferences(event.references);
+              }
+              setChatHistory((prev) => {
+                const newHistory = [...prev];
+                if (
+                  newHistory.length > 0 &&
+                  newHistory[newHistory.length - 1].role === "bot"
+                ) {
+                  newHistory[newHistory.length - 1] = {
+                    role: "bot",
+                    content: event.response,
+                  };
+                }
+                return newHistory;
+              });
+              break;
+
+            case "error":
+              setIsStreaming(false);
+              throw new Error(event.message);
+          }
+        }
+
         setTimeout(scrollToBottom, 100);
-      } catch (error: any) {
+      } catch (error: unknown) {
+        setIsStreaming(false);
+        const err = error as Error & { name?: string };
         if (
-          error.name === "AbortError" ||
+          err.name === "AbortError" ||
           abortControllerRef.current?.signal.aborted
         ) {
           return;
@@ -259,6 +304,7 @@ export default function AgentPage() {
       } finally {
         if (!abortControllerRef.current?.signal.aborted) {
           setIsLoading(false);
+          setIsStreaming(false);
         }
       }
     },
@@ -392,21 +438,31 @@ export default function AgentPage() {
                             }
                           >
                             {message.role === "bot" &&
-                            (message.content === "Thinking..." ||
-                              (isLoading &&
-                                index === chatHistory.length - 1)) ? (
+                            isLoading &&
+                            !isStreaming &&
+                            index === chatHistory.length - 1 &&
+                            message.content === "" ? (
                               <div className="flex items-center space-x-2">
                                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
                                 <span>{loadingText}</span>
                               </div>
                             ) : (
-                              <MessageContent content={message.content} />
+                              <>
+                                <MessageContent content={message.content} />
+                                {/* Typing cursor during streaming */}
+                                {message.role === "bot" &&
+                                  isStreaming &&
+                                  index === chatHistory.length - 1 && (
+                                    <span className="inline-block w-2 h-4 ml-1 bg-current animate-pulse" />
+                                  )}
+                              </>
                             )}
                           </div>
                         </div>
                         {message.role === "bot" &&
                           index === chatHistory.length - 1 &&
-                          !isLoading && (
+                          !isLoading &&
+                          !isStreaming && (
                             <div className="ml-11 mt-2">
                               <MessageActions message={message.content} />
                             </div>

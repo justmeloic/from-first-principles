@@ -35,65 +35,109 @@ class SSEManager:
         """Add a new SSE connection for a session."""
         queue = asyncio.Queue()
         self._connections[session_id] = queue
-        _logger.info(f'Added SSE connection for session {session_id}')
+        _logger.info(f"Added SSE connection for session {session_id}")
         return queue
 
     def remove_connection(self, session_id: str):
         """Remove an SSE connection."""
         if session_id in self._connections:
             del self._connections[session_id]
-            _logger.info(f'Removed SSE connection for session {session_id}')
+            _logger.info(f"Removed SSE connection for session {session_id}")
 
     async def send_status_update(
-        self, session_id: str, status: str, message: str = '', tool_name: str = ''
+        self, session_id: str, status: str, message: str = "", tool_name: str = ""
     ):
         """Send a status update to the frontend."""
         if session_id in self._connections:
             update = {
-                'type': 'status_update',
-                'status': status,
-                'message': message,
-                'tool_name': tool_name,
-                'timestamp': time.time(),
+                "type": "status_update",
+                "status": status,
+                "message": message,
+                "tool_name": tool_name,
+                "timestamp": time.time(),
             }
             try:
                 await self._connections[session_id].put(update)
-                _logger.debug(f'Sent status update to session {session_id}: {status}')
+                _logger.debug(f"Sent status update to session {session_id}: {status}")
             except Exception as e:
                 _logger.error(
-                    f'Error sending status update to session {session_id}: {e}'
+                    f"Error sending status update to session {session_id}: {e}"
                 )
 
     async def send_tool_start(
         self, session_id: str, tool_name: str, estimated_duration: int = None
     ):
         """Send notification that a tool has started."""
-        message = f'Processing with {tool_name}...'
+        message = f"Processing with {tool_name}..."
         if estimated_duration:
-            message += f' (estimated {estimated_duration}s)'
+            message += f" (estimated {estimated_duration}s)"
 
-        await self.send_status_update(session_id, 'tool_running', message, tool_name)
+        await self.send_status_update(session_id, "tool_running", message, tool_name)
 
     async def send_tool_complete(self, session_id: str, tool_name: str):
         """Send notification that a tool has completed."""
         await self.send_status_update(
-            session_id, 'tool_complete', f'{tool_name} completed', tool_name
+            session_id, "tool_complete", f"{tool_name} completed", tool_name
         )
 
     async def send_final_response(self, session_id: str, response: str):
         """Send the final response."""
         update = {
-            'type': 'final_response',
-            'response': response,
-            'timestamp': time.time(),
+            "type": "final_response",
+            "response": response,
+            "timestamp": time.time(),
         }
         if session_id in self._connections:
             try:
                 await self._connections[session_id].put(update)
             except Exception as e:
                 _logger.error(
-                    f'Error sending final response to session {session_id}: {e}'
+                    f"Error sending final response to session {session_id}: {e}"
                 )
+
+    async def send_token(self, session_id: str, token: str):
+        """Send a streaming token chunk to the frontend."""
+        if session_id in self._connections:
+            update = {
+                "type": "token",
+                "content": token,
+                "timestamp": time.time(),
+            }
+            try:
+                await self._connections[session_id].put(update)
+            except Exception as e:
+                _logger.error(f"Error sending token to session {session_id}: {e}")
+
+    async def send_stream_complete(
+        self, session_id: str, response: str, references: dict = None
+    ):
+        """Send stream completion event with final response and references."""
+        if session_id in self._connections:
+            update = {
+                "type": "stream_complete",
+                "response": response,
+                "references": references or {},
+                "timestamp": time.time(),
+            }
+            try:
+                await self._connections[session_id].put(update)
+            except Exception as e:
+                _logger.error(
+                    f"Error sending stream complete to session {session_id}: {e}"
+                )
+
+    async def send_error(self, session_id: str, error_message: str):
+        """Send an error event to the frontend."""
+        if session_id in self._connections:
+            update = {
+                "type": "error",
+                "message": error_message,
+                "timestamp": time.time(),
+            }
+            try:
+                await self._connections[session_id].put(update)
+            except Exception as e:
+                _logger.error(f"Error sending error to session {session_id}: {e}")
 
     async def generate_sse_stream(self, session_id: str) -> AsyncGenerator[str, None]:
         """Generate SSE stream for a session."""
@@ -107,14 +151,14 @@ class SSEManager:
 
                     # Format as SSE
                     data = json.dumps(update)
-                    yield f'data: {data}\n\n'
+                    yield f"data: {data}\n\n"
 
                 except asyncio.TimeoutError:
                     # Send keep-alive
                     yield 'data: {"type": "keep_alive"}\n\n'
 
         except Exception as e:
-            _logger.error(f'Error in SSE stream for session {session_id}: {e}')
+            _logger.error(f"Error in SSE stream for session {session_id}: {e}")
         finally:
             self.remove_connection(session_id)
 

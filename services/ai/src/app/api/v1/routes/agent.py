@@ -65,11 +65,11 @@ async def _save_file_as_artifact(
     import time
 
     # Generate unique filename for this upload
-    original_filename = file.filename or 'unknown'
+    original_filename = file.filename or "unknown"
     # Use timestamp  uuid to ensure uniqueness
     timestamp = int(time.time())
     unique_id = str(uuid.uuid4())[:8]
-    artifact_filename = f'{timestamp}_{unique_id}_{original_filename}'
+    artifact_filename = f"{timestamp}_{unique_id}_{original_filename}"
 
     # Read file content
     content = await file.read()
@@ -84,7 +84,7 @@ async def _save_file_as_artifact(
     artifact = genai_types.Part.from_bytes(data=content, mime_type=mime_type)
 
     # Get session information
-    session_id = getattr(request.state, 'actual_session_id', 'default')
+    session_id = getattr(request.state, "actual_session_id", "default")
 
     # Get artifact service from app state
     artifact_service = request.app.state.artifact_service
@@ -101,7 +101,7 @@ async def _save_file_as_artifact(
     return artifact_filename
 
 
-@router.get('/models')
+@router.get("/models")
 async def get_available_models():
     """Get list of available models.
 
@@ -109,19 +109,19 @@ async def get_available_models():
         Dictionary of available models with their configurations.
     """
     return {
-        'models': agent_factory.get_available_models(),
-        'default_model': agent_factory.get_default_model(),
+        "models": agent_factory.get_available_models(),
+        "default_model": agent_factory.get_default_model(),
     }
 
 
-@router.post('/', response_model=AgentResponse)
+@router.post("/", response_model=AgentResponse)
 @limiter.limit(AGENT_RATE_LIMIT)
 @limiter.limit(GLOBAL_AGENT_RATE_LIMIT, key_func=_global_key)
 async def agent_endpoint(
     request: Request,
     response: Response,
     config: Annotated[AgentConfig, Depends(get_agent_config)],
-    text: str = Form(''),  # Allow empty text
+    text: str = Form(""),  # Allow empty text
     model: str | None = Form(None),
     files: list[UploadFile] | None = File(None),
 ) -> AgentResponse:
@@ -149,7 +149,7 @@ async def agent_endpoint(
     if not text.strip() and not files:
         raise HTTPException(
             status_code=400,
-            detail='Must provide either text message or file attachments',
+            detail="Must provide either text message or file attachments",
         )
 
     # Create Query object from form data
@@ -162,7 +162,7 @@ async def agent_endpoint(
     model_name = await get_session_model(request)
     runner = get_runner(request, config, model_name)
 
-    _logger.info('Received query for model %s: %s...', model_name, query.text[:50])
+    _logger.info("Received query for model %s: %s...", model_name, query.text[:50])
 
     # Handle file uploads if present
     uploaded_artifacts = []
@@ -174,8 +174,8 @@ async def agent_endpoint(
             raise HTTPException(
                 status_code=400,
                 detail={
-                    'message': 'File validation failed',
-                    'errors': validation_errors,
+                    "message": "File validation failed",
+                    "errors": validation_errors,
                 },
             )
 
@@ -183,7 +183,7 @@ async def agent_endpoint(
         for file in files:
             artifact_id = await _save_file_as_artifact(request, file, config)
             uploaded_artifacts.append(artifact_id)
-            _logger.info(f'Saved file {file.filename} as artifact {artifact_id}')
+            _logger.info(f"Saved file {file.filename} as artifact {artifact_id}")
 
     # Add file references to query context
     if uploaded_artifacts:
@@ -199,7 +199,102 @@ async def agent_endpoint(
     )
 
 
-@router.get('/events/{session_id}')
+@router.post("/stream")
+@limiter.limit(AGENT_RATE_LIMIT)
+@limiter.limit(GLOBAL_AGENT_RATE_LIMIT, key_func=_global_key)
+async def agent_stream_endpoint(
+    request: Request,
+    response: Response,
+    config: Annotated[AgentConfig, Depends(get_agent_config)],
+    text: str = Form(""),
+    model: str | None = Form(None),
+    files: list[UploadFile] | None = File(None),
+) -> StreamingResponse:
+    """
+    Streaming endpoint: processes user message with token-level SSE streaming.
+
+    Returns Server-Sent Events with real-time token chunks as the agent
+    generates its response, enabling word-by-word display in the frontend.
+
+    Event types:
+        - `status`: Processing status updates
+        - `tool_start`: Tool execution started
+        - `token`: Content token chunk
+        - `complete`: Final response with references
+        - `error`: Error occurred during processing
+
+    Args:
+        request: The incoming FastAPI request object.
+        response: The outgoing FastAPI response object.
+        text: The user's query text as form field.
+        model: Optional model selection as form field.
+        files: Optional list of uploaded files.
+        config: The agent configuration.
+
+    Returns:
+        StreamingResponse with SSE-formatted token events.
+    """
+    # Validate input
+    if not text.strip() and not files:
+        raise HTTPException(
+            status_code=400,
+            detail="Must provide either text message or file attachments",
+        )
+
+    query = Query(text=text, model=model)
+    request.state.selected_model = query.model
+
+    # Get dependencies
+    session = await get_or_create_session(request, response, config)
+    model_name = await get_session_model(request)
+    runner = get_runner(request, config, model_name)
+
+    _logger.info(
+        "Received streaming query for model %s: %s...", model_name, query.text[:50]
+    )
+
+    # Handle file uploads
+    uploaded_artifacts = []
+    if files:
+        validator = FileValidator()
+        is_valid, validation_errors = await validator.validate_files(files)
+
+        if not is_valid:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "message": "File validation failed",
+                    "errors": validation_errors,
+                },
+            )
+
+        for file in files:
+            artifact_id = await _save_file_as_artifact(request, file, config)
+            uploaded_artifacts.append(artifact_id)
+
+    if uploaded_artifacts:
+        query.file_artifacts = uploaded_artifacts
+
+    return StreamingResponse(
+        agent_service.stream_query(
+            request=request,
+            query=query,
+            config=config,
+            session=session,
+            runner=runner,
+            model_name=model_name,
+        ),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",  # Disable nginx buffering
+            "Access-Control-Allow-Origin": "*",
+        },
+    )
+
+
+@router.get("/events/{session_id}")
 async def sse_endpoint(session_id: str) -> StreamingResponse:
     """Server-Sent Events endpoint for real-time status updates.
 
@@ -209,15 +304,15 @@ async def sse_endpoint(session_id: str) -> StreamingResponse:
     Returns:
         A StreamingResponse that sends real-time updates to the frontend.
     """
-    _logger.info('Starting SSE stream for session: %s', session_id)
+    _logger.info("Starting SSE stream for session: %s", session_id)
 
     return StreamingResponse(
         sse_manager.generate_sse_stream(session_id),
-        media_type='text/plain',
+        media_type="text/plain",
         headers={
-            'Cache-Control': 'no-cache',
-            'Connection': 'keep-alive',
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Headers': 'Cache-Control',
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Headers": "Cache-Control",
         },
     )
