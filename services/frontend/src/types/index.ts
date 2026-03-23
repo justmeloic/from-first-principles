@@ -112,3 +112,45 @@ export interface SearchHealth {
   test_search_successful: boolean;
   sample_results_count: number;
 }
+
+// SSE Streaming Event Types
+export interface SSEStatusEvent {
+  type: 'status';
+  message: string;
+  timestamp: number;
+}
+
+export interface SSEToolStartEvent {
+  type: 'tool_start';
+  tool_name: string;
+  message: string;
+  timestamp: number;
+}
+
+export interface SSETokenEvent {
+  type: 'token';
+  content: string;
+  timestamp: number;
+}
+
+export interface SSECompleteEvent {
+  type: 'complete';
+  response: string;
+  references: { [key: string]: Reference };
+  model: string;
+  session_id: string;
+  timestamp: number;
+}
+
+export interface SSEErrorEvent {
+  type: 'error';
+  message: string;
+  timestamp: number;
+}
+
+export type SSEEvent =
+  | SSEStatusEvent
+  | SSEToolStartEvent
+  | SSETokenEvent
+  | SSECompleteEvent
+  | SSEErrorEvent;

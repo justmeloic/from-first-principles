@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from . import agent
 from .agent_factory import agent_factory
 
-__all__ = ['agent', 'agent_factory']
+__all__ = ["agent_factory"]
