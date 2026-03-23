@@ -77,6 +77,10 @@ make prod
 log_info "Step 3: Waiting for services to initialize..."
 sleep 8
 
+# Restore uv.lock if modified during AI deployment (prevents git pull failures)
+cd "$PROJECT_ROOT"
+git checkout -- services/ai/uv.lock 2>/dev/null || true
+
 NGROK_DOMAIN="elenor-sleekiest-funereally.ngrok-free.dev"
 NGROK_URL="https://$NGROK_DOMAIN"
 log_info "Using static ngrok domain: $NGROK_URL"
