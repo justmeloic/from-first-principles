@@ -1,6 +1,6 @@
 # Wealthsimple CX Analytics Frontend Makefile
 
-.PHONY: dev build install clean release release-major release-minor release-patch help
+.PHONY: dev build install clean test release release-major release-minor release-patch help
 
 # Default target
 dev:
@@ -18,6 +18,10 @@ install:
 clean:
 	@echo "Cleaning build artifacts..."
 	rm -rf .next out node_modules/.cache
+
+test:
+	@echo "Running tests with coverage..."
+	npm run test:coverage
 
 release:
 	@echo "Creating release (automatic version bump)..."
@@ -41,6 +45,7 @@ help:
 	@echo "  make build         - Build static frontend and copy to backend"
 	@echo "  make install       - Install npm dependencies"
 	@echo "  make clean         - Clean build artifacts and cache"
+	@echo "  make test          - Run tests with coverage"
 	@echo "  make release       - Create release with automatic version bump"
 	@echo "  make release-major - Create major version release (x.0.0)"
 	@echo "  make release-minor - Create minor version release (0.x.0)"

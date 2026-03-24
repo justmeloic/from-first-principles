@@ -35,3 +35,6 @@ next-env.d.ts
 
 # test files
 /public/content-test
+
+# coverage
+coverage/
