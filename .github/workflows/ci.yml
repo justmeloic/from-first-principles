@@ -28,6 +28,9 @@ jobs:
         with:
           python-version: "3.13"
 
+      - name: Install litellm from GitHub (PyPI quarantined)
+        run: pip install git+https://github.com/BerriAI/litellm.git
+
       - name: Install dependencies
         run: pip install -e .
 
@@ -36,7 +39,7 @@ jobs:
 
   # ── Frontend (Next.js) ──────────────────────────────────────────
   frontend-checks:
-    name: Frontend · typecheck + lint + build
+    name: Frontend · test + typecheck + lint + build
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -55,6 +58,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Run tests
+        run: npm run test:run
 
       - name: Type check
         run: npx tsc --noEmit

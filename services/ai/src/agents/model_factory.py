@@ -14,11 +14,15 @@
 
 """Model factory for creating AI models based on configuration."""
 
+from __future__ import annotations
+
 import os
-from typing import Union
+from typing import TYPE_CHECKING, Union
 
 from google.adk.models import Gemini
-from google.adk.models.lite_llm import LiteLlm
+
+if TYPE_CHECKING:
+    from google.adk.models.lite_llm import LiteLlm
 
 try:
     from ..app.core.config import settings
@@ -26,7 +30,7 @@ except ImportError:
     # Handle direct script execution
     import sys
 
-    sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+    sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
     from app.core.config import settings
 
 
@@ -43,35 +47,45 @@ def create_model(model_name: str) -> Union[Gemini, LiteLlm]:
     Raises:
         ValueError: If the model provider is not supported or model is not found
         RuntimeError: If required environment variables are not set for Ollama
+        ImportError: If litellm is not installed when using Ollama provider
     """
     model_config = settings.AVAILABLE_MODELS.get(model_name)
 
     if not model_config:
         raise ValueError(f"Model '{model_name}' not found in AVAILABLE_MODELS")
 
-    provider = model_config['provider']
+    provider = model_config["provider"]
 
-    if provider == 'gemini':
+    if provider == "gemini":
         return Gemini(model=model_name)
 
-    elif provider == 'ollama':
+    elif provider == "ollama":
+        # Lazy import - litellm only needed for Ollama
+        try:
+            from google.adk.models.lite_llm import LiteLlm
+        except ImportError as e:
+            raise ImportError(
+                "litellm is required for Ollama provider. "
+                "Install with: pip install litellm"
+            ) from e
+
         # Set the required environment variable for Ollama
-        os.environ['OLLAMA_API_BASE'] = settings.OLLAMA_API_BASE
+        os.environ["OLLAMA_API_BASE"] = settings.OLLAMA_API_BASE
 
         # Verify Ollama is accessible (optional, but good for debugging)
         try:
             # Use ollama_chat provider as recommended in the documentation
-            ollama_model_name = f'ollama_chat/{model_name}'
+            ollama_model_name = f"ollama_chat/{model_name}"
             return LiteLlm(model=ollama_model_name)
         except Exception as e:
             raise RuntimeError(
                 f"Failed to create Ollama model '{model_name}'. "
-                f'Make sure Ollama is running at {settings.OLLAMA_API_BASE} '
-                f'and the model is available. Error: {e}'
+                f"Make sure Ollama is running at {settings.OLLAMA_API_BASE} "
+                f"and the model is available. Error: {e}"
             )
 
     else:
-        raise ValueError(f'Unsupported model provider: {provider}')
+        raise ValueError(f"Unsupported model provider: {provider}")
 
 
 def get_default_model() -> Union[Gemini, LiteLlm]:
@@ -80,12 +94,12 @@ def get_default_model() -> Union[Gemini, LiteLlm]:
     Returns:
         A model instance for the default model
     """
-    if settings.MODEL_PROVIDER == 'gemini':
+    if settings.MODEL_PROVIDER == "gemini":
         return create_model(settings.GEMINI_MODEL)
-    elif settings.MODEL_PROVIDER == 'ollama':
+    elif settings.MODEL_PROVIDER == "ollama":
         return create_model(settings.OLLAMA_MODEL)
     else:
-        raise ValueError(f'Unsupported MODEL_PROVIDER: {settings.MODEL_PROVIDER}')
+        raise ValueError(f"Unsupported MODEL_PROVIDER: {settings.MODEL_PROVIDER}")
 
 
 def get_pro_model() -> Union[Gemini, LiteLlm]:
@@ -94,9 +108,9 @@ def get_pro_model() -> Union[Gemini, LiteLlm]:
     Returns:
         A model instance for the pro model
     """
-    if settings.MODEL_PROVIDER == 'gemini':
+    if settings.MODEL_PROVIDER == "gemini":
         return create_model(settings.GEMINI_MODEL_PRO)
-    elif settings.MODEL_PROVIDER == 'ollama':
+    elif settings.MODEL_PROVIDER == "ollama":
         return create_model(settings.OLLAMA_MODEL_PRO)
     else:
-        raise ValueError(f'Unsupported MODEL_PROVIDER: {settings.MODEL_PROVIDER}')
+        raise ValueError(f"Unsupported MODEL_PROVIDER: {settings.MODEL_PROVIDER}")

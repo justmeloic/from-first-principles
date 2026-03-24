@@ -8,6 +8,12 @@
     "build": "npm run clean && next build",
     "start": "next start",
     "lint": "next lint",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
     "release": "standard-version && mv CHANGELOG.md ../../CHANGELOG.md",
     "release:major": "standard-version --release-as major && mv CHANGELOG.md ../../CHANGELOG.md",
     "release:minor": "standard-version --release-as minor && mv CHANGELOG.md ../../CHANGELOG.md",
@@ -80,15 +86,23 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "@testing-library/jest-dom": "^6.4.2",
+    "@testing-library/react": "^14.2.1",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^22",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "@vitest/coverage-v8": "^2.1.8",
     "eslint": "^8.0.0",
     "eslint-config-next": "14.2.23",
+    "jsdom": "^24.0.0",
     "postcss": "^8",
     "tailwindcss": "^3.4.17",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^2.1.8"
   }
 }

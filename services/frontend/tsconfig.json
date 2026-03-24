@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "baseUrl": "src",
+    "types": ["@testing-library/jest-dom"],
     "lib": [
       "dom",
       "dom.iterable",
