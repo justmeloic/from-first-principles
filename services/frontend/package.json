@@ -11,6 +11,9 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
     "release": "standard-version && mv CHANGELOG.md ../../CHANGELOG.md",
     "release:major": "standard-version --release-as major && mv CHANGELOG.md ../../CHANGELOG.md",
     "release:minor": "standard-version --release-as minor && mv CHANGELOG.md ../../CHANGELOG.md",
@@ -83,6 +86,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@testing-library/jest-dom": "^6.4.2",
     "@testing-library/react": "^14.2.1",
     "@testing-library/user-event": "^14.6.1",

@@ -20,7 +20,8 @@
     - [Technologies Used](#technologies-used)
     - [Local Development](#local-development)
     - [Building](#building)
-4.  [Contributing](#contributing)
+4.  [Testing](#testing)
+5.  [Contributing](#contributing)
 
 This directory contains the source code for the web user interface of "From First Principles." This UI is responsible for presenting the website's content to users in a clear, accessible, and engaging manner. The project has been refactored to use **Next.js** and **Tailwind CSS**, providing a modern, performant, and maintainable foundation.
 
@@ -136,18 +137,22 @@ yarn export
 ## API Configuration Management
 
 ### Frontend Integration Script
+
 Use the utility script to easily switch between local and ngrok API configurations:
+
 ```bash
 ./scripts/switch-api-config.sh ngrok   # Switch to ngrok
 ./scripts/switch-api-config.sh local   # Switch to local
 ```
 
 This script automatically:
+
 - Detects the current ngrok tunnel URL
 - Updates your `.env.local` file with the appropriate API base URL
 - Provides clear feedback on the configuration change
 
 #### Usage Examples
+
 ```bash
 # Switch to ngrok tunnel (for production testing)
 ./scripts/switch-api-config.sh ngrok
@@ -160,6 +165,19 @@ This script automatically:
 ```
 
 **Note:** Remember to restart your Next.js development server after switching configurations to apply the changes.
+
+## Testing <a name="testing"></a>
+
+| Type           | Command         | CI                  | Description                    |
+| -------------- | --------------- | ------------------- | ------------------------------ |
+| Unit/Component | `make test`     | ✅ On push to `dev` | Vitest + React Testing Library |
+| E2E            | `make test-e2e` | Monthly (1st)       | Playwright (Chromium)          |
+
+**Additional commands:**
+
+- `npm run test:run` — Single test run (no watch)
+- `npm run test:e2e:ui` — Playwright interactive UI
+- `npm run test:e2e:headed` — E2E with visible browser
 
 ## Contributing <a name="contributing"></a>
 
