@@ -28,6 +28,9 @@ jobs:
         with:
           python-version: "3.13"
 
+      - name: Install litellm from GitHub (PyPI quarantined)
+        run: pip install git+https://github.com/BerriAI/litellm.git
+
       - name: Install dependencies
         run: pip install -e .
 
