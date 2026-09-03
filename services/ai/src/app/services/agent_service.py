@@ -37,6 +37,7 @@ from google.genai import types as genai_types
 from loguru import logger as _logger
 
 from src.agents.agent_factory import agent_factory
+from src.app.artifacts.file_processors import get_file_processor
 from src.app.core.config import settings
 from src.app.models import AgentConfig
 from src.app.schemas import AgentResponse, Query
@@ -59,8 +60,6 @@ class AgentService:
         file_artifacts: List[str],
     ) -> str:
         """Process uploaded files and return formatted content for agent context."""
-        from src.app.artifacts.file_processors import get_file_processor
-
         if not file_artifacts:
             return ""
 
