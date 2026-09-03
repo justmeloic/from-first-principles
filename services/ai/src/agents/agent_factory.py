@@ -14,7 +14,6 @@
 
 """Agent factory for creating and managing multiple model instances."""
 
-from functools import lru_cache
 from typing import Any, Dict
 
 from google.adk.agents import Agent
@@ -41,13 +40,18 @@ class AgentFactory:
         self._agent_cache: Dict[str, Agent] = {}
         self._available_models = settings.AVAILABLE_MODELS
         _logger.info(
-            f'AgentFactory initialized with {len(self._available_models)} '
-            'available models'
+            f"AgentFactory initialized with {len(self._available_models)} "
+            "available models"
         )
 
-    @lru_cache(maxsize=10)
     def get_agent(self, model_name: str) -> Agent:
         """Get or create an agent for the specified model.
+
+        Agents are cached in an instance-level dict keyed by ``model_name`` so
+        subsequent lookups are O(1). ``functools.lru_cache`` is deliberately
+        avoided here because decorating a bound method retains a strong
+        reference to ``self`` for the lifetime of the cache, defeating garbage
+        collection of the factory instance.
 
         Args:
             model_name: The name of the model to create an agent for.
@@ -58,36 +62,39 @@ class AgentFactory:
         Raises:
             ValueError: If the model name is not supported.
         """
+        # Fast path: agent already built.
+        cached = self._agent_cache.get(model_name)
+        if cached is not None:
+            return cached
+
         if model_name not in self._available_models:
             available = list(self._available_models.keys())
             raise ValueError(
                 f"Model '{model_name}' not supported. Available models: {available}"
             )
 
-        if model_name not in self._agent_cache:
-            model_config = self._available_models[model_name]
+        model_config = self._available_models[model_name]
 
-            # Only add tools if the model supports them
-            tools = [google_search] if model_config.get('supports_tools', False) else []
+        # Only add tools if the model supports them
+        tools = [google_search] if model_config.get("supports_tools", False) else []
 
-            # Create the model instance using our model factory
-            model_instance = create_model(model_name)
+        # Create the model instance using our model factory
+        model_instance = create_model(model_name)
 
-            agent = Agent(
-                name=f'assistant_{model_name.replace("-", "_").replace(".", "_")}',
-                model=model_instance,
-                description=(
-                    f'AI assistant using {model_config["display_name"]} - '
-                    f'{model_config["description"]}'
-                ),
-                instruction=get_general_assistant_instructions(),
-                tools=tools,
-            )
+        agent = Agent(
+            name=f'assistant_{model_name.replace("-", "_").replace(".", "_")}',
+            model=model_instance,
+            description=(
+                f'AI assistant using {model_config["display_name"]} - '
+                f'{model_config["description"]}'
+            ),
+            instruction=get_general_assistant_instructions(),
+            tools=tools,
+        )
 
-            self._agent_cache[model_name] = agent
-            _logger.info(f'Created new agent for model: {model_name}')
-
-        return self._agent_cache[model_name]
+        self._agent_cache[model_name] = agent
+        _logger.info(f"Created new agent for model: {model_name}")
+        return agent
 
     def get_available_models(self) -> Dict[str, Dict[str, Any]]:
         """Get list of available models with their configurations.
@@ -119,8 +126,7 @@ class AgentFactory:
     def clear_cache(self) -> None:
         """Clear the agent cache. Useful for testing or configuration updates."""
         self._agent_cache.clear()
-        self.get_agent.cache_clear()
-        _logger.info('Agent cache cleared')
+        _logger.info("Agent cache cleared")
 
 
 # Singleton instance
