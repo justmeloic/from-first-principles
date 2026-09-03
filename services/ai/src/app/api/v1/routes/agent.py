@@ -19,6 +19,7 @@ endpoints. It manages session state purely through ADK's SessionService and
 handles agent interactions through FastAPI endpoints.
 """
 
+import time
 import uuid
 from typing import Annotated
 
@@ -62,8 +63,6 @@ async def _save_file_as_artifact(
     request: Request, file: UploadFile, config: AgentConfig
 ) -> str:
     """Save an uploaded file as an artifact and return its filename."""
-    import time
-
     # Generate unique filename for this upload
     original_filename = file.filename or "unknown"
     # Use timestamp  uuid to ensure uniqueness

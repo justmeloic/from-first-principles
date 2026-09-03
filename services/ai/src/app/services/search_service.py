@@ -20,6 +20,7 @@ search capabilities over blog content.
 
 from __future__ import annotations
 
+import asyncio
 import time
 from typing import Dict, Optional
 
@@ -37,8 +38,12 @@ class SearchService:
         """Initialize the search service."""
         self._logger = _logger
         self._pipeline: Optional[IndexingPipeline] = None
+        # Guards lazy pipeline initialization so concurrent first requests
+        # don't each build their own IndexingPipeline (which loads embedding
+        # models and opens LanceDB connections).
+        self._pipeline_lock = asyncio.Lock()
 
-    def _get_pipeline(self) -> IndexingPipeline:
+    async def _get_pipeline(self) -> IndexingPipeline:
         """Get or create the indexing pipeline instance.
 
         Returns:
@@ -47,17 +52,23 @@ class SearchService:
         Raises:
             HTTPException: If the pipeline cannot be initialized.
         """
-        if self._pipeline is None:
+        if self._pipeline is not None:
+            return self._pipeline
+
+        async with self._pipeline_lock:
+            # Re-check under the lock in case another coroutine finished first.
+            if self._pipeline is not None:
+                return self._pipeline
             try:
                 self._pipeline = create_pipeline()
-                self._logger.info('Initialized indexing pipeline for search')
+                self._logger.info("Initialized indexing pipeline for search")
             except Exception as e:
-                self._logger.error(f'Failed to initialize indexing pipeline: {e}')
+                self._logger.error(f"Failed to initialize indexing pipeline: {e}")
                 raise HTTPException(
                     status_code=500,
-                    detail={'message': 'Search service unavailable', 'error': str(e)},
+                    detail={"message": "Search service unavailable", "error": str(e)},
                 )
-        return self._pipeline
+            return self._pipeline
 
     async def search_content(self, search_query: SearchQuery) -> SearchResponse:
         """Search content using the indexing pipeline.
@@ -75,10 +86,10 @@ class SearchService:
         try:
             self._logger.info(
                 f"Searching content with query: '{search_query.query}' "
-                f'(mode: {search_query.search_type}, limit: {search_query.limit})'
+                f"(mode: {search_query.search_type}, limit: {search_query.limit})"
             )
 
-            pipeline = self._get_pipeline()
+            pipeline = await self._get_pipeline()
 
             # Start timing the search
             start_time = time.time()
@@ -98,7 +109,7 @@ class SearchService:
 
             self._logger.info(
                 f"Found {len(results)} results for query: '{search_query.query}' "
-                f'in {search_time_ms:.1f}ms'
+                f"in {search_time_ms:.1f}ms"
             )
 
             # Convert results to our response format
@@ -106,37 +117,37 @@ class SearchService:
             for result in results:
                 formatted_results.append(
                     {
-                        'title': result.get('title', 'Untitled'),
-                        'category': result.get('category', 'unknown'),
-                        'slug': result.get('slug', ''),
-                        'excerpt': result.get('excerpt', ''),
-                        'content': result.get('content', ''),
-                        'score': result.get('score', 0.0),
-                        'url': result.get('url', ''),
-                        'publish_date': result.get('publish_date', ''),
-                        'tags': result.get('tags', []),
-                        'metadata': {
-                            'distance': result.get('distance'),
-                            'term_matches': result.get('term_matches'),
+                        "title": result.get("title", "Untitled"),
+                        "category": result.get("category", "unknown"),
+                        "slug": result.get("slug", ""),
+                        "excerpt": result.get("excerpt", ""),
+                        "content": result.get("content", ""),
+                        "score": result.get("score", 0.0),
+                        "url": result.get("url", ""),
+                        "publish_date": result.get("publish_date", ""),
+                        "tags": result.get("tags", []),
+                        "metadata": {
+                            "distance": result.get("distance"),
+                            "term_matches": result.get("term_matches"),
                         },
                     }
                 )
 
             return SearchResponse(
-                query=search_query.dict(),
+                query=search_query.model_dump(),
                 results=formatted_results,
                 total_results=len(formatted_results),
                 search_time_ms=search_time_ms,
                 metadata={
-                    'search_type': search_query.search_type,
-                    'threshold_applied': search_query.similarity_threshold,
+                    "search_type": search_query.search_type,
+                    "threshold_applied": search_query.similarity_threshold,
                 },
             )
 
         except Exception as e:
-            self._logger.exception(f'Error during content search: {e}')
+            self._logger.exception(f"Error during content search: {e}")
             raise HTTPException(
-                status_code=500, detail={'message': 'Search failed', 'error': str(e)}
+                status_code=500, detail={"message": "Search failed", "error": str(e)}
             )
 
     async def get_search_stats(self) -> Dict:
@@ -149,21 +160,21 @@ class SearchService:
             HTTPException: If stats retrieval fails.
         """
         try:
-            self._logger.info('Retrieving search statistics')
+            self._logger.info("Retrieving search statistics")
 
-            pipeline = self._get_pipeline()
+            pipeline = await self._get_pipeline()
             stats = pipeline.get_indexing_stats()
 
-            self._logger.info('Successfully retrieved search statistics')
+            self._logger.info("Successfully retrieved search statistics")
             return stats
 
         except Exception as e:
-            self._logger.exception(f'Error retrieving search statistics: {e}')
+            self._logger.exception(f"Error retrieving search statistics: {e}")
             raise HTTPException(
                 status_code=500,
                 detail={
-                    'message': 'Failed to retrieve search statistics',
-                    'error': str(e),
+                    "message": "Failed to retrieve search statistics",
+                    "error": str(e),
                 },
             )
 
@@ -174,26 +185,26 @@ class SearchService:
             Dict: Health status information.
         """
         try:
-            pipeline = self._get_pipeline()
+            pipeline = await self._get_pipeline()
 
             # Test with a simple query
             test_results = pipeline.search_unified(
-                query='test',
-                mode='semantic',
+                query="test",
+                mode="semantic",
                 limit=1,
             )
 
             return {
-                'status': 'healthy',
-                'pipeline_available': True,
-                'database_available': pipeline.db is not None,
-                'test_search_successful': True,
-                'sample_results_count': len(test_results),
+                "status": "healthy",
+                "pipeline_available": True,
+                "database_available": pipeline.db is not None,
+                "test_search_successful": True,
+                "sample_results_count": len(test_results),
             }
 
         except Exception as e:
-            self._logger.warning(f'Search service health check failed: {e}')
-            return {'status': 'unhealthy', 'pipeline_available': False, 'error': str(e)}
+            self._logger.warning(f"Search service health check failed: {e}")
+            return {"status": "unhealthy", "pipeline_available": False, "error": str(e)}
 
 
 # Global instance

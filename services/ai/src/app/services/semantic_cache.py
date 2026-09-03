@@ -31,10 +31,11 @@ from __future__ import annotations
 import hashlib
 import time
 import uuid
+from collections import deque
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Deque, Dict, List, Optional
 
 from loguru import logger as _logger
 
@@ -153,8 +154,10 @@ class SemanticCache:
 
         # Statistics
         self._stats = CacheStats()
-        self._hit_latencies: List[float] = []
-        self._miss_latencies: List[float] = []
+        # Bounded ring buffers so latency stats can't grow unbounded and
+        # slicing on every request is unnecessary.
+        self._hit_latencies: Deque[float] = deque(maxlen=1000)
+        self._miss_latencies: Deque[float] = deque(maxlen=1000)
 
         # Set up database path
         if db_path is None:
@@ -310,6 +313,25 @@ class SemanticCache:
         normalized = f"{model_name}:{query.strip().lower()}"
         return hashlib.md5(normalized.encode()).hexdigest()
 
+    def _table_size(self) -> int:
+        """Return the number of rows in the cache table.
+
+        Prefers LanceDB's native ``count_rows()`` which is O(1) on table
+        metadata. Falls back to materializing the table into pandas only when
+        ``count_rows`` is unavailable (older LanceDB or mocked tables in tests).
+        """
+        if self.cache_table is None:
+            return 0
+        count_rows = getattr(self.cache_table, "count_rows", None)
+        if callable(count_rows):
+            try:
+                result = count_rows()
+                if isinstance(result, int):
+                    return result
+            except Exception:  # pragma: no cover - defensive fallback
+                pass
+        return len(self.cache_table.to_pandas())
+
     async def get(
         self,
         query: str,
@@ -450,7 +472,7 @@ class SemanticCache:
 
             # Insert into cache
             self.cache_table.add([cache_entry])
-            self._stats.total_entries = len(self.cache_table.to_pandas())
+            self._stats.total_entries = self._table_size()
 
             self._logger.debug(
                 f'Cached response for query: "{query[:50]}..." '
@@ -482,7 +504,7 @@ class SemanticCache:
             return
 
         try:
-            current_size = len(self.cache_table.to_pandas())
+            current_size = self._table_size()
 
             if current_size >= self.max_cache_size:
                 # Evict oldest 10% of entries
@@ -492,16 +514,16 @@ class SemanticCache:
                     f"evicting {evict_count} oldest entries"
                 )
 
-                # Get oldest entries
+                # Materialize the table once and pull only the ids needed.
                 df = self.cache_table.to_pandas()
                 df_sorted = df.sort_values("created_at", ascending=True)
                 ids_to_evict = df_sorted["cache_id"].head(evict_count).tolist()
 
-                # Delete oldest entries
-                for cache_id in ids_to_evict:
-                    self.cache_table.delete(f"cache_id = '{cache_id}'")
-
-                self._logger.info(f"Evicted {len(ids_to_evict)} cache entries")
+                # Batch delete via a single IN clause instead of N round trips.
+                if ids_to_evict:
+                    id_list = ", ".join(f"'{cid}'" for cid in ids_to_evict)
+                    self.cache_table.delete(f"cache_id IN ({id_list})")
+                    self._logger.info(f"Evicted {len(ids_to_evict)} cache entries")
 
             # Also evict expired entries (TTL)
             await self._evict_expired()
@@ -531,8 +553,9 @@ class SemanticCache:
                     expired_ids.append(row["cache_id"])
 
             if expired_ids:
-                for cache_id in expired_ids:
-                    self.cache_table.delete(f"cache_id = '{cache_id}'")
+                # Single batched delete instead of one query per id.
+                id_list = ", ".join(f"'{cid}'" for cid in expired_ids)
+                self.cache_table.delete(f"cache_id IN ({id_list})")
                 self._logger.info(f"Evicted {len(expired_ids)} expired cache entries")
 
         except Exception as e:
@@ -542,12 +565,8 @@ class SemanticCache:
         """Record a cache hit for statistics."""
         latency = (time.time() - start_time) * 1000
         self._stats.cache_hits += 1
+        # deque(maxlen=...) auto-evicts oldest entries — O(1) append.
         self._hit_latencies.append(latency)
-
-        # Keep only last 1000 latencies
-        if len(self._hit_latencies) > 1000:
-            self._hit_latencies = self._hit_latencies[-1000:]
-
         self._stats.avg_hit_latency_ms = sum(self._hit_latencies) / len(
             self._hit_latencies
         )
@@ -557,11 +576,6 @@ class SemanticCache:
         latency = (time.time() - start_time) * 1000
         self._stats.cache_misses += 1
         self._miss_latencies.append(latency)
-
-        # Keep only last 1000 latencies
-        if len(self._miss_latencies) > 1000:
-            self._miss_latencies = self._miss_latencies[-1000:]
-
         self._stats.avg_miss_latency_ms = sum(self._miss_latencies) / len(
             self._miss_latencies
         )
@@ -608,12 +622,11 @@ class SemanticCache:
                 self.cache_table.delete(f"model_name = '{model_name}'")
             else:
                 # Clear all entries
-                count = len(self.cache_table.to_pandas())
+                count = self._table_size()
                 self.db.drop_table(self.cache_table_name)
                 self._create_cache_table()
 
-            if self.cache_table is not None:
-                self._stats.total_entries = len(self.cache_table.to_pandas())
+            self._stats.total_entries = self._table_size()
             self._logger.info(f"Cleared {count} cache entries")
             return count
 
@@ -645,22 +658,23 @@ class SemanticCache:
             query_embedding = self._generate_embedding(query)
             results = self.cache_table.search(query_embedding).limit(100).to_list()
 
-            invalidated = 0
+            # Collect ids to invalidate then perform a single batched delete.
+            ids_to_invalidate: List[str] = []
             for result in results:
                 distance = result.get("_distance", 1.0)
                 similarity = 1.0 - distance
-
                 if similarity >= threshold:
-                    self.cache_table.delete(f"cache_id = '{result['cache_id']}'")
-                    invalidated += 1
+                    ids_to_invalidate.append(result["cache_id"])
 
-            if invalidated:
+            if ids_to_invalidate:
+                id_list = ", ".join(f"'{cid}'" for cid in ids_to_invalidate)
+                self.cache_table.delete(f"cache_id IN ({id_list})")
                 self._logger.info(
-                    f"Invalidated {invalidated} cache entries similar to: "
+                    f"Invalidated {len(ids_to_invalidate)} cache entries similar to: "
                     f'"{query[:50]}..."'
                 )
 
-            return invalidated
+            return len(ids_to_invalidate)
 
         except Exception as e:
             self._logger.error(f"Error invalidating cache entries: {e}")
